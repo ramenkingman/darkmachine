@@ -26,7 +26,9 @@ public class PlayFabManager : MonoBehaviour
     public int InvitationToSave => _invitationToSave;
     public int CurrentEnergyToSave => _currentEnergyToSave;
 
-    private static readonly string CUSTOM_ID_SAVE_KEY = "CUSTOM_ID_SAVE_KEY";
+    // ゲームごとに異なるキーを設定
+    private static readonly string CUSTOM_ID_SAVE_KEY = "CUSTOM_ID_SAVE_KEY_GAME2"; // ゲームごとに異なるキーに変更
+
     private string lastSessionEndTimeKey = "LastSessionEndTime";
 
     private void Awake()
@@ -158,6 +160,8 @@ public class PlayFabManager : MonoBehaviour
         if (_shouldCreateAccount)
         {
             id = GenerateCustomID();
+            _customID = id;
+            SaveCustomID();
         }
 
         return id;
@@ -166,6 +170,7 @@ public class PlayFabManager : MonoBehaviour
     private void SaveCustomID()
     {
         PlayerPrefs.SetString(CUSTOM_ID_SAVE_KEY, _customID);
+        PlayerPrefs.Save();
     }
 
     private string GenerateCustomID()
