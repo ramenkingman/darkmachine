@@ -9,7 +9,7 @@ public class PlayFabManager : MonoBehaviour
 {
     public static PlayFabManager Instance { get; private set; }
 
-    private bool _shouldCreateAccount;
+    private bool _shouldCreateAccount = true;
     private string _customID;
     private int _scoreToSave;
     private int _playerLevelToSave;
@@ -106,10 +106,10 @@ public class PlayFabManager : MonoBehaviour
         var bots = BotManager.Instance.GetBots();
         foreach (var bot in bots)
         {
-        // 元の1時間単位に戻す
-        int botCoins = bot.GetCurrentScorePerHour() * (int)offlineDuration.TotalHours;
-        totalCoinsToAdd += botCoins;
-        Debug.Log($"Bot: {bot.Name}, Level: {bot.Level}, Coins Added: {botCoins}");
+            // 元の1時間単位に戻す
+            int botCoins = bot.GetCurrentScorePerHour() * (int)offlineDuration.TotalHours;
+            totalCoinsToAdd += botCoins;
+            Debug.Log($"Bot: {bot.Name}, Level: {bot.Level}, Coins Added: {botCoins}");
         }
 
         ScoreManager.Instance.AddScore(totalCoinsToAdd);
@@ -117,16 +117,13 @@ public class PlayFabManager : MonoBehaviour
     }
 
     private void Login()
-{
-    _customID = LoadCustomID();
-    var request = new LoginWithCustomIDRequest 
-    { 
-        CustomId = _customID, 
-        CreateAccount = _shouldCreateAccount 
-    };
-    Debug.Log($"Logging in with CustomID: {_customID}, CreateAccount: {_shouldCreateAccount}");
-    PlayFabClientAPI.LoginWithCustomID(request, OnLoginSuccess, OnLoginFailure);
-}
+    {
+        _customID = LoadCustomID();
+        Debug.Log("CustomID: " + _customID);
+        var request = new LoginWithCustomIDRequest { CustomId = _customID, CreateAccount = _shouldCreateAccount };
+        PlayFabClientAPI.LoginWithCustomID(request, OnLoginSuccess, OnLoginFailure);
+    }
+
     private void OnLoginSuccess(LoginResult result)
     {
         if (_shouldCreateAccount && !result.NewlyCreated)
@@ -154,25 +151,17 @@ public class PlayFabManager : MonoBehaviour
     }
 
     private string LoadCustomID()
-{
-    string id = PlayerPrefs.GetString(CUSTOM_ID_SAVE_KEY);
-    _shouldCreateAccount = string.IsNullOrEmpty(id);
-
-    if (_shouldCreateAccount)
     {
-        id = GenerateCustomID();
-        SaveCustomID(id);
+        string id = PlayerPrefs.GetString(CUSTOM_ID_SAVE_KEY);
+        _shouldCreateAccount = string.IsNullOrEmpty(id);
+
+        if (_shouldCreateAccount)
+        {
+            id = GenerateCustomID();
+        }
+
+        return id;
     }
-
-    return id;
-}
-
-private void SaveCustomID(string id)
-{
-    PlayerPrefs.SetString(CUSTOM_ID_SAVE_KEY, id);
-    PlayerPrefs.Save();
-}
-
 
     private void SaveCustomID()
     {
