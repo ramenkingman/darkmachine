@@ -26,7 +26,9 @@ public class PlayFabManager : MonoBehaviour
     public int InvitationToSave => _invitationToSave;
     public int CurrentEnergyToSave => _currentEnergyToSave;
 
-    private static readonly string CUSTOM_ID_SAVE_KEY = "CUSTOM_ID_SAVE_KEY";
+    // ゲーム2用のカスタムID保存キー
+    private static readonly string CUSTOM_ID_SAVE_KEY = "CUSTOM_ID_SAVE_KEY_GAME2"; // ゲーム2に変更
+
     private string lastSessionEndTimeKey = "LastSessionEndTime";
 
     private void Awake()
@@ -148,6 +150,8 @@ public class PlayFabManager : MonoBehaviour
     private void OnLoginFailure(PlayFabError error)
     {
         Debug.LogError("PlayFabのログインに失敗\n" + error.GenerateErrorReport());
+        DeleteCustomID();
+        Login(); // 再試行
     }
 
     private string LoadCustomID()
@@ -158,6 +162,12 @@ public class PlayFabManager : MonoBehaviour
         if (_shouldCreateAccount)
         {
             id = GenerateCustomID();
+            _customID = id;
+            SaveCustomID();
+        }
+        else
+        {
+            _customID = id; // 修正：既存のカスタムIDをセットする
         }
 
         return id;
@@ -166,6 +176,13 @@ public class PlayFabManager : MonoBehaviour
     private void SaveCustomID()
     {
         PlayerPrefs.SetString(CUSTOM_ID_SAVE_KEY, _customID);
+        PlayerPrefs.Save();
+    }
+
+    private void DeleteCustomID()
+    {
+        PlayerPrefs.DeleteKey(CUSTOM_ID_SAVE_KEY);
+        PlayerPrefs.Save();
     }
 
     private string GenerateCustomID()
