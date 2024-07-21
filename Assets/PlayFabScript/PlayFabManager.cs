@@ -117,12 +117,16 @@ public class PlayFabManager : MonoBehaviour
     }
 
     private void Login()
-    {
-        _customID = LoadCustomID();
-        var request = new LoginWithCustomIDRequest { CustomId = _customID, CreateAccount = _shouldCreateAccount };
-        PlayFabClientAPI.LoginWithCustomID(request, OnLoginSuccess, OnLoginFailure);
-    }
-
+{
+    _customID = LoadCustomID();
+    var request = new LoginWithCustomIDRequest 
+    { 
+        CustomId = _customID, 
+        CreateAccount = _shouldCreateAccount 
+    };
+    Debug.Log($"Logging in with CustomID: {_customID}, CreateAccount: {_shouldCreateAccount}");
+    PlayFabClientAPI.LoginWithCustomID(request, OnLoginSuccess, OnLoginFailure);
+}
     private void OnLoginSuccess(LoginResult result)
     {
         if (_shouldCreateAccount && !result.NewlyCreated)
@@ -150,19 +154,25 @@ public class PlayFabManager : MonoBehaviour
     }
 
     private string LoadCustomID()
-    {
-        string id = PlayerPrefs.GetString(CUSTOM_ID_SAVE_KEY);
-        _shouldCreateAccount = string.IsNullOrEmpty(id);
+{
+    string id = PlayerPrefs.GetString(CUSTOM_ID_SAVE_KEY);
+    _shouldCreateAccount = string.IsNullOrEmpty(id);
 
-        if (_shouldCreateAccount)
-        {
-            return GenerateCustomID();
-        }
-        else
-        {
-            return id;
-        }
+    if (_shouldCreateAccount)
+    {
+        id = GenerateCustomID();
+        SaveCustomID(id);
     }
+
+    return id;
+}
+
+private void SaveCustomID(string id)
+{
+    PlayerPrefs.SetString(CUSTOM_ID_SAVE_KEY, id);
+    PlayerPrefs.Save();
+}
+
 
     private void SaveCustomID()
     {
