@@ -26,8 +26,8 @@ public class PlayFabManager : MonoBehaviour
     public int InvitationToSave => _invitationToSave;
     public int CurrentEnergyToSave => _currentEnergyToSave;
 
-    // ゲームごとに異なるキーを設定
-    private static readonly string CUSTOM_ID_SAVE_KEY = "CUSTOM_ID_SAVE_KEY_GAME2"; // ゲームごとに異なるキーに変更
+    // ゲーム2用のカスタムID保存キー
+    private static readonly string CUSTOM_ID_SAVE_KEY = "CUSTOM_ID_SAVE_KEY_GAME2"; // ゲーム2に変更
 
     private string lastSessionEndTimeKey = "LastSessionEndTime";
 
@@ -85,7 +85,7 @@ public class PlayFabManager : MonoBehaviour
             Debug.Log($"Offline Duration: {offlineDuration.TotalSeconds} seconds");
 
             int energyToAdd = CalculateEnergyForOfflineDuration(offlineDuration);
-            Debug.Log($"Energy to add: {energyToAdd}");
+            Debug.Log($"Energy to add: {energyToAdd} (Recovery Rate: {LevelManager.Instance.ScoreIncreaseAmount} per second)");
             EnergyManager.Instance.IncreaseEnergy(energyToAdd);
 
             CalculateBotEarnings(offlineDuration);
@@ -98,8 +98,9 @@ public class PlayFabManager : MonoBehaviour
 
     private int CalculateEnergyForOfflineDuration(TimeSpan offlineDuration)
     {
-        // 1秒ごとにエネルギーを1ポイント追加
-        return (int)(offlineDuration.TotalSeconds);
+        // プレイヤーレベルに基づいたスタミナ回復量を計算
+        int energyRecoveryRate = LevelManager.Instance.ScoreIncreaseAmount; // スコア増加量と同じ
+        return (int)(offlineDuration.TotalSeconds * energyRecoveryRate);
     }
 
     private void CalculateBotEarnings(TimeSpan offlineDuration)
@@ -150,6 +151,8 @@ public class PlayFabManager : MonoBehaviour
     private void OnLoginFailure(PlayFabError error)
     {
         Debug.LogError("PlayFabのログインに失敗\n" + error.GenerateErrorReport());
+        DeleteCustomID();
+        Login(); // 再試行
     }
 
     private string LoadCustomID()
@@ -163,6 +166,10 @@ public class PlayFabManager : MonoBehaviour
             _customID = id;
             SaveCustomID();
         }
+        else
+        {
+            _customID = id; // 修正：既存のカスタムIDをセットする
+        }
 
         return id;
     }
@@ -170,6 +177,12 @@ public class PlayFabManager : MonoBehaviour
     private void SaveCustomID()
     {
         PlayerPrefs.SetString(CUSTOM_ID_SAVE_KEY, _customID);
+        PlayerPrefs.Save();
+    }
+
+    private void DeleteCustomID()
+    {
+        PlayerPrefs.DeleteKey(CUSTOM_ID_SAVE_KEY);
         PlayerPrefs.Save();
     }
 
