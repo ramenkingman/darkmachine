@@ -1262,7 +1262,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04eb016791d1efe4993d80b3756860ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  chipImage: {fileID: 1961124947}
+  rankChipImage: {fileID: 1497743572}
   rankText: {fileID: 1426753666}
 --- !u!4 &524567279
 Transform:

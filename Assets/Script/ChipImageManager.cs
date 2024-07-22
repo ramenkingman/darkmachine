@@ -1,10 +1,10 @@
 using UnityEngine;
-using UnityEngine.UI; 
+using UnityEngine.UI; // 追加
 using TMPro;
 
 public class ChipImageManager : MonoBehaviour
 {
-    public Image chipImage; // チップ画像を表示するUIのImageコンポーネント
+    public Image rankChipImage; // ランクに応じたチップ画像を表示するUIのImageコンポーネント
     public TextMeshProUGUI rankText; // ランク名を表示するTextMeshProUGUI
     private long currentScore; // intからlongに変更
 
@@ -45,7 +45,10 @@ public class ChipImageManager : MonoBehaviour
 
         if (newChipSprite != null)
         {
-            chipImage.sprite = newChipSprite;
+            if (rankChipImage != null)
+            {
+                rankChipImage.sprite = newChipSprite;
+            }
         }
         else
         {
