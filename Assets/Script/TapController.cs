@@ -55,6 +55,12 @@ public class TapController : MonoBehaviour
 
     public void OnChipTap(BaseEventData eventData)
     {
+        if (EnergyManager.Instance.CurrentEnergy <= 0)
+        {
+            Debug.LogWarning("スタミナが不足しています。");
+            return;
+        }
+
         PointerEventData pointerEventData = eventData as PointerEventData;
         if (pointerEventData == null)
         {

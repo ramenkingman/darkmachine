@@ -26,6 +26,13 @@ public class ScaleObjectOnButtonPress : MonoBehaviour
 
     void OnScaleButtonClicked()
     {
+        // スタミナが0の場合は何もしない
+        if (EnergyManager.Instance.CurrentEnergy <= 0)
+        {
+            Debug.LogWarning("スタミナが不足しています。");
+            return;
+        }
+
         // 既存のコルーチンを停止
         StopAllCoroutines();
 
