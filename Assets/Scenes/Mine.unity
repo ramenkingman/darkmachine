@@ -2055,7 +2055,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!222 &260060819
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -6162,7 +6162,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levelUpButton: {fileID: 864817972}
   buttonImage: {fileID: 864817973}
-  levelUpSprite: {fileID: 21300000, guid: a45e7342844430b4d9e9b952e1219d63, type: 3}
+  levelUpSprite: {fileID: 21300000, guid: 6690817d6cce8c243869b9163a96a9d0, type: 3}
   comingSoonSprite: {fileID: 21300000, guid: eeaab8b4a6945a2409f372c693fe8120, type: 3}
 --- !u!114 &864817972
 MonoBehaviour:
