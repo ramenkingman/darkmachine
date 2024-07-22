@@ -1,47 +1,44 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEngine.EventSystems;
-using System.Collections;
 
 public class ChipImageManager : MonoBehaviour
 {
-    public Image chipImage;
-    public TextMeshProUGUI rankText;
-    private long currentScore;
+    public Image chipImage; // チップ画像を表示するUIのImageコンポーネント
+    public TextMeshProUGUI rankText; // ランク名を表示するTextMeshProUGUI
+    private long currentScore; // intからlongに変更
 
+    // チップ画像のパス
     private string[] chipImagePaths = {
-        "Chips/GunrunnerChip",
-        "Chips/RoguelancerChip",
-        "Chips/ExoraiderChip"
+        "Chips/WhiteChip",   // 0-5000
+        "Chips/RedChip",     // 5000-10K
+        "Chips/BlueChip",    // 10K-100K
+        "Chips/GreenChip",   // 100K-1M
+        "Chips/CyanChip",    // 1M-10M
+        "Chips/BlackChip",   // 10M-50M
+        "Chips/DarkBlueChip",// 50M-100M
+        "Chips/YellowChip",  // 100M-1B
+        "Chips/SilverChip",  // 1B-100B
+        "Chips/GoldChip"     // 100B以上
     };
 
+    // ランク名
     private string[] rankNames = {
-        "Gunrunner",
-        "Roguelancer",
-        "Exoraider"
+        "White rank",   // 0-5000
+        "Red rank",     // 5000-10K
+        "Blue rank",    // 10K-100K
+        "Green rank",   // 100K-1M
+        "Cyan rank",    // 1M-10M
+        "Black rank",   // 10M-50M
+        "DarkBlue rank",// 50M-100M
+        "Yellow rank",  // 100M-1B
+        "Silver rank",  // 1B-100B
+        "Gold rank"     // 100B以上
     };
-
-    private Vector3 originalScale;
-    public float animationDuration = 0.1f;
-    public float scaleFactor = 1.2f;
-
-    private Button button;
 
     void Start()
     {
-        originalScale = chipImage.rectTransform.localScale;
         UpdateChipImage();
-
-        button = gameObject.GetComponent<Button>();
-        if (button != null)
-        {
-            button.onClick.AddListener(OnChipClick);
-        }
-        else
-        {
-            Debug.LogError("Button component not found on the object.");
-        }
     }
 
     void Update()
@@ -83,41 +80,27 @@ public class ChipImageManager : MonoBehaviour
     {
         if (score < 5000) return chipImagePaths[0];
         if (score < 10000) return chipImagePaths[1];
-        return chipImagePaths[2];
+        if (score < 100000) return chipImagePaths[2];
+        if (score < 1000000) return chipImagePaths[3];
+        if (score < 10000000) return chipImagePaths[4];
+        if (score < 50000000) return chipImagePaths[5];
+        if (score < 100000000) return chipImagePaths[6];
+        if (score < 1000000000) return chipImagePaths[7];
+        if (score < 100000000000L) return chipImagePaths[8]; // Lを追加してlong型であることを明示
+        return chipImagePaths[9];
     }
 
     string GetRankName(long score)
     {
         if (score < 5000) return rankNames[0];
         if (score < 10000) return rankNames[1];
-        return rankNames[2];
-    }
-
-    private void OnChipClick()
-    {
-        StopAllCoroutines();
-        StartCoroutine(AnimateChip());
-        TapController.Instance?.OnPointerDown(null); // スコア加算を呼び出す
-    }
-
-    private IEnumerator AnimateChip()
-    {
-        yield return StartCoroutine(ScaleTo(originalScale * scaleFactor, animationDuration));
-        yield return StartCoroutine(ScaleTo(originalScale, animationDuration));
-    }
-
-    private IEnumerator ScaleTo(Vector3 targetScale, float duration)
-    {
-        Vector3 startScale = chipImage.rectTransform.localScale;
-        float time = 0f;
-
-        while (time < duration)
-        {
-            chipImage.rectTransform.localScale = Vector3.Lerp(startScale, targetScale, time / duration);
-            time += Time.deltaTime;
-            yield return null;
-        }
-
-        chipImage.rectTransform.localScale = targetScale;
+        if (score < 100000) return rankNames[2];
+        if (score < 1000000) return rankNames[3];
+        if (score < 10000000) return rankNames[4];
+        if (score < 50000000) return rankNames[5];
+        if (score < 100000000) return rankNames[6];
+        if (score < 1000000000) return rankNames[7];
+        if (score < 100000000000L) return rankNames[8]; // Lを追加してlong型であることを明示
+        return rankNames[9];
     }
 }

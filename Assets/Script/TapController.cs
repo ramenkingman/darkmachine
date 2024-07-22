@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 
-public class TapController : MonoBehaviour, IPointerDownHandler
+public class TapController : MonoBehaviour
 {
     public static TapController Instance { get; private set; } // インスタンスを追加
     public TextMeshProUGUI scoreText;
@@ -53,15 +53,24 @@ public class TapController : MonoBehaviour, IPointerDownHandler
         UpdateEnergyText();
     }
 
-    public void OnPointerDown(PointerEventData eventData)
+    public void OnChipTap(BaseEventData eventData)
     {
-        Vector2 localPoint;
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.transform as RectTransform, eventData.position, canvas.worldCamera, out localPoint);
+        PointerEventData pointerEventData = eventData as PointerEventData;
+        if (pointerEventData == null)
+        {
+            Debug.LogError("OnChipTap called without PointerEventData");
+            return;
+        }
+
         int scoreIncrease = LevelManager.Instance.ScoreIncreaseAmount;
         ScoreManager.Instance.AddScore(scoreIncrease); // スコアを即座に更新
         EnergyManager.Instance.DecreaseEnergy(scoreIncrease); // スタミナの減少
 
+        Vector2 localPoint;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas.transform as RectTransform, pointerEventData.position, canvas.worldCamera, out localPoint);
         ShowScoreIncrease("+" + scoreIncrease.ToString(), localPoint); // スコア増加量の表示
+        Debug.Log("Score increased at position: " + localPoint); // デバッグログを追加
+
         PlayTapSound(); // タップ音を再生
     }
 
