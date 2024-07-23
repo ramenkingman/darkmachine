@@ -385,4 +385,49 @@ public class PlayFabManager : MonoBehaviour
     {
         _xFollowToSave += amount;
     }
+
+    // 新しいメソッド: WalletAddressでスコアを取得
+    public void GetScoreByWalletAddress(string walletAddress)
+    {
+        // WalletAddressを検索してプレイヤーIDを取得
+        PlayFabClientAPI.GetLeaderboard(new GetLeaderboardRequest
+        {
+            StatisticName = "WalletAddress",
+            MaxResultsCount = 1
+        }, result =>
+        {
+            var player = result.Leaderboard.Find(p => p.DisplayName == walletAddress);
+            if (player != null)
+            {
+                Debug.Log($"Player found: {player.PlayFabId}");
+                GetPlayerScore(player.PlayFabId);
+            }
+            else
+            {
+                Debug.LogError("Player not found");
+            }
+        }, OnError);
+    }
+
+    private void GetPlayerScore(string playFabId)
+    {
+        var request = new GetUserDataRequest
+        {
+            PlayFabId = playFabId,
+            Keys = new List<string> { "Score" }
+        };
+
+        PlayFabClientAPI.GetUserData(request, result =>
+        {
+            if (result.Data != null && result.Data.TryGetValue("Score", out var scoreData))
+            {
+                int score = int.Parse(scoreData.Value);
+                Debug.Log($"Score for WalletAddress: {score}");
+            }
+            else
+            {
+                Debug.LogError("Score not found");
+            }
+        }, OnError);
+    }
 }
