@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using PlayFab;
 using PlayFab.ClientModels;
+using System.Collections.Generic;
 
 public class ChangeDisplayName : MonoBehaviour
 {
@@ -37,8 +38,18 @@ public class ChangeDisplayName : MonoBehaviour
         inputText = inputField.text;
 
         // PlayFabでDisplayNameを更新
-        var request = new UpdateUserTitleDisplayNameRequest { DisplayName = inputText };
-        PlayFabClientAPI.UpdateUserTitleDisplayName(request, OnDisplayNameUpdateSuccess, OnDisplayNameUpdateFailure);
+        var displayNameRequest = new UpdateUserTitleDisplayNameRequest { DisplayName = inputText };
+        PlayFabClientAPI.UpdateUserTitleDisplayName(displayNameRequest, OnDisplayNameUpdateSuccess, OnDisplayNameUpdateFailure);
+
+        // Player Data (Title)にWalletAddressを保存
+        var playerDataRequest = new UpdateUserDataRequest
+        {
+            Data = new Dictionary<string, string>
+            {
+                { "WalletAddress", inputText }
+            }
+        };
+        PlayFabClientAPI.UpdateUserData(playerDataRequest, OnUserDataUpdateSuccess, OnUserDataUpdateFailure);
 
         // 入力フィールドのテキストをPlayerPrefsに保存
         PlayerPrefs.SetString("InputFieldText", inputText);
@@ -55,5 +66,15 @@ public class ChangeDisplayName : MonoBehaviour
     void OnDisplayNameUpdateFailure(PlayFabError error)
     {
         Debug.LogError("Failed to update DisplayName: " + error.GenerateErrorReport());
+    }
+
+    void OnUserDataUpdateSuccess(UpdateUserDataResult result)
+    {
+        Debug.Log("UserData updated successfully!");
+    }
+
+    void OnUserDataUpdateFailure(PlayFabError error)
+    {
+        Debug.LogError("Failed to update UserData: " + error.GenerateErrorReport());
     }
 }
