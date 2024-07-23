@@ -146,9 +146,6 @@ public class PlayFabManager : MonoBehaviour
         _playFabId = result.PlayFabId;
 
         LoadPlayerData();
-        // プロフィールと統計の取得
-        GetUserProfile();
-        GetUserStatistics();
     }
 
     private void OnLoginFailure(PlayFabError error)
@@ -387,40 +384,5 @@ public class PlayFabManager : MonoBehaviour
     public void IncreaseXFollow(int amount)
     {
         _xFollowToSave += amount;
-    }
-
-    // プロフィールを取得するためのメソッド
-    public void GetUserProfile()
-    {
-        var request = new GetAccountInfoRequest
-        {
-            PlayFabId = "9C0514FC792DDA7D"
-        };
-        PlayFabClientAPI.GetAccountInfo(request, OnGetUserProfileSuccess, OnAPIError);
-    }
-
-    private void OnGetUserProfileSuccess(GetAccountInfoResult result)
-    {
-        var accountInfo = result.AccountInfo;
-        Debug.Log($"PlayFabId: {accountInfo.PlayFabId}, Username: {accountInfo.Username}, Created: {accountInfo.Created}");
-    }
-
-    // 統計を取得するためのメソッド
-    public void GetUserStatistics()
-    {
-        var request = new GetPlayerStatisticsRequest();
-        PlayFabClientAPI.GetPlayerStatistics(request, OnGetUserStatisticsSuccess, OnAPIError);
-    }
-
-    private void OnGetUserStatisticsSuccess(GetPlayerStatisticsResult result)
-    {
-        var statistics = result.Statistics;
-        Debug.Log($"Score: {statistics.Find(s => s.StatisticName == "Score")?.Value}, PlayerLevel: {statistics.Find(s => s.StatisticName == "PlayerLevel")?.Value}, XFollow: {statistics.Find(s => s.StatisticName == "XFollow")?.Value}, Invitation: {statistics.Find(s => s.StatisticName == "Invitation")?.Value}, CurrentEnergy: {statistics.Find(s => s.StatisticName == "CurrentEnergy")?.Value}");
-    }
-
-    // APIリクエストエラー時の共通ハンドラ
-    private void OnAPIError(PlayFabError error)
-    {
-        Debug.LogError("APIリクエスト中にエラーが発生しました: " + error.GenerateErrorReport());
     }
 }
