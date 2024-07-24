@@ -5,16 +5,16 @@ using PlayFab;
 using PlayFab.ClientModels;
 using System.Collections.Generic;
 
-public class ChangeDisplayName : MonoBehaviour
+public class ChangeCustomId : MonoBehaviour
 {
     public TMP_InputField inputField;
-    public Button changeNameButton;
+    public Button changeIdButton;
     private string inputText;
 
     void Start()
     {
         // ボタンにクリックイベントを追加
-        changeNameButton.onClick.AddListener(OnChangeNameButtonClicked);
+        changeIdButton.onClick.AddListener(OnChangeIdButtonClicked);
 
         // 入力フィールドの値をPlayerPrefsからロード
         if (PlayerPrefs.HasKey("InputFieldText"))
@@ -26,55 +26,39 @@ public class ChangeDisplayName : MonoBehaviour
     void OnDestroy()
     {
         // ボタンのクリックイベントを削除
-        if (changeNameButton != null)
+        if (changeIdButton != null)
         {
-            changeNameButton.onClick.RemoveListener(OnChangeNameButtonClicked);
+            changeIdButton.onClick.RemoveListener(OnChangeIdButtonClicked);
         }
     }
 
-    void OnChangeNameButtonClicked()
+    void OnChangeIdButtonClicked()
     {
         // 入力フィールドのテキストを取得
         inputText = inputField.text;
 
-        // PlayFabでDisplayNameを更新
-        var displayNameRequest = new UpdateUserTitleDisplayNameRequest { DisplayName = inputText };
-        PlayFabClientAPI.UpdateUserTitleDisplayName(displayNameRequest, OnDisplayNameUpdateSuccess, OnDisplayNameUpdateFailure);
-
-        // Player Data (Title)にWalletAddressを保存
-        var playerDataRequest = new UpdateUserDataRequest
+        // PlayFabでCustomIdをリンク
+        var linkCustomIdRequest = new LinkCustomIDRequest
         {
-            Data = new Dictionary<string, string>
-            {
-                { "WalletAddress", inputText }
-            }
+            CustomId = inputText,
+            ForceLink = true
         };
-        PlayFabClientAPI.UpdateUserData(playerDataRequest, OnUserDataUpdateSuccess, OnUserDataUpdateFailure);
+        PlayFabClientAPI.LinkCustomID(linkCustomIdRequest, OnCustomIdLinkSuccess, OnCustomIdLinkFailure);
 
         // 入力フィールドのテキストをPlayerPrefsに保存
         PlayerPrefs.SetString("InputFieldText", inputText);
 
         // ボタンを非アクティブにする
-        changeNameButton.gameObject.SetActive(false);
+        changeIdButton.gameObject.SetActive(false);
     }
 
-    void OnDisplayNameUpdateSuccess(UpdateUserTitleDisplayNameResult result)
+    void OnCustomIdLinkSuccess(LinkCustomIDResult result)
     {
-        Debug.Log("DisplayName updated successfully!");
+        Debug.Log("CustomId linked successfully!");
     }
 
-    void OnDisplayNameUpdateFailure(PlayFabError error)
+    void OnCustomIdLinkFailure(PlayFabError error)
     {
-        Debug.LogError("Failed to update DisplayName: " + error.GenerateErrorReport());
-    }
-
-    void OnUserDataUpdateSuccess(UpdateUserDataResult result)
-    {
-        Debug.Log("UserData updated successfully!");
-    }
-
-    void OnUserDataUpdateFailure(PlayFabError error)
-    {
-        Debug.LogError("Failed to update UserData: " + error.GenerateErrorReport());
+        Debug.LogError("Failed to link CustomId: " + error.GenerateErrorReport());
     }
 }
