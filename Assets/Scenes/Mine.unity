@@ -2556,10 +2556,10 @@ MonoBehaviour:
   pressedTextColor: {r: 1, g: 1, b: 1, a: 1}
   selectedTextColor: {r: 1, g: 1, b: 1, a: 1}
   disabledTextColor: {r: 0.5647059, g: 0.5647059, b: 0.5647059, a: 1}
-  normalSprite: {fileID: 21300000, guid: 63cb92965b7915a4cbc1082314122ebe, type: 3}
-  pressedSprite: {fileID: 21300000, guid: b4e5931eb8482a849b02194981d76a2e, type: 3}
-  selectedSprite: {fileID: 21300000, guid: b4e5931eb8482a849b02194981d76a2e, type: 3}
-  disabledSprite: {fileID: 21300000, guid: 63cb92965b7915a4cbc1082314122ebe, type: 3}
+  normalSprite: {fileID: 21300000, guid: e3325e226c3387f44945be1c2f41dc64, type: 3}
+  pressedSprite: {fileID: 21300000, guid: c026a9fbfeae88c44b3ff97c89851fec, type: 3}
+  selectedSprite: {fileID: 21300000, guid: c026a9fbfeae88c44b3ff97c89851fec, type: 3}
+  disabledSprite: {fileID: 21300000, guid: e3325e226c3387f44945be1c2f41dc64, type: 3}
   tapSound: {fileID: 8300000, guid: b8058acb5c58dd743bee66c8be5fbd4a, type: 3}
 --- !u!1 &344883828
 GameObject:
@@ -6671,8 +6671,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 974299507}
   m_HandleRect: {fileID: 974299506}
   m_Direction: 2
-  m_Value: 1.0000015
-  m_Size: 0.8540945
+  m_Value: 1.000001
+  m_Size: 0.7719195
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
