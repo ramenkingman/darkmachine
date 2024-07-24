@@ -48,6 +48,9 @@ public class ChangeCustomId : MonoBehaviour
         // 入力フィールドのテキストをPlayerPrefsに保存
         PlayerPrefs.SetString("InputFieldText", inputText);
 
+        // カスタムIDをPlayerPrefsに保存して、PlayFabManagerが次回のログイン時に使用するようにする
+        PlayerPrefs.SetString("CUSTOM_ID_SAVE_KEY_GAME2", inputText);
+
         // ボタンを非アクティブにする
         changeIdButton.gameObject.SetActive(false);
     }
