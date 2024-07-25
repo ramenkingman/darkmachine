@@ -27,9 +27,7 @@ public class PlayFabManager : MonoBehaviour
     public int InvitationToSave => _invitationToSave;
     public int CurrentEnergyToSave => _currentEnergyToSave;
 
-    // カスタムID保存キー
     private static readonly string CUSTOM_ID_SAVE_KEY = "CUSTOM_ID_SAVE_KEY_GAME2";
-
     private string lastSessionEndTimeKey = "LastSessionEndTime";
 
     private void Awake()
@@ -38,6 +36,8 @@ public class PlayFabManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            Application.focusChanged += OnApplicationFocusChanged;
+            Application.quitting += OnApplicationQuit;
         }
         else
         {
@@ -59,6 +59,23 @@ public class PlayFabManager : MonoBehaviour
             yield return null;
         }
         CalculateOfflineTime();
+    }
+
+    private void OnApplicationFocusChanged(bool hasFocus)
+    {
+        if (!hasFocus)
+        {
+            SaveLastSessionEndTime();
+            if (_isDataLoaded)
+            {
+                SavePlayerDataImmediate(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, XFollowToSave, InvitationToSave, BotManager.Instance.GetBotLevels(), EnergyManager.Instance.CurrentEnergy);
+            }
+            else
+            {
+                Debug.LogWarning("データがロードされていないため、保存できませんでした。");
+            }
+            Debug.Log("Data saved on application losing focus.");
+        }
     }
 
     private void OnApplicationQuit()
@@ -149,7 +166,6 @@ public class PlayFabManager : MonoBehaviour
 
         Debug.Log("ログイン成功!!");
         _playFabId = result.PlayFabId;
-
         _titlePlayerID = result.EntityToken.Entity.Id;
 
         LoadPlayerData();
@@ -259,7 +275,7 @@ public class PlayFabManager : MonoBehaviour
 
         PlayFabClientAPI.UpdateUserData(request, OnDataSend, OnError);
 
-        yield return new WaitForSeconds(2); // 2秒ごとにデータを保存
+        yield return new WaitForSeconds(2); 
 
         _isSavingData = false;
     }
@@ -280,7 +296,7 @@ public class PlayFabManager : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(2); // 2秒ごとにデータを自動保存
+            yield return new WaitForSeconds(2); 
             if (_dataChanged && !_isSavingData && _isDataLoaded)
             {
                 StartCoroutine(SavePlayerDataCoroutine());

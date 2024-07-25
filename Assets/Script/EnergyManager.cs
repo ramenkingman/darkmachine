@@ -6,8 +6,8 @@ public class EnergyManager : MonoBehaviour
 {
     public static EnergyManager Instance { get; private set; }
 
-    private int currentEnergy = 2000; // 初期エネルギー
-    private int maxEnergy = 2000; // 最大エネルギー
+    private int currentEnergy = 2000; 
+    private int maxEnergy = 2000; 
 
     private void Awake()
     {
@@ -25,7 +25,7 @@ public class EnergyManager : MonoBehaviour
     private void Start()
     {
         Debug.Log("EnergyManager Start: Starting IncreaseEnergyOverTime coroutine");
-        StartCoroutine(IncreaseEnergyOverTime()); // コルーチンを開始
+        StartCoroutine(IncreaseEnergyOverTime());
     }
 
     public int CurrentEnergy => currentEnergy;
@@ -34,7 +34,7 @@ public class EnergyManager : MonoBehaviour
     public void SetCurrentEnergy(int energy)
     {
         currentEnergy = energy;
-        TapController.Instance?.UpdateEnergyText(); // nullチェックを追加
+        TapController.Instance?.UpdateEnergyText();
         Debug.Log($"SetCurrentEnergy: Energy set to {currentEnergy}");
     }
 
@@ -46,7 +46,7 @@ public class EnergyManager : MonoBehaviour
             currentEnergy = 0;
         }
 
-        TapController.Instance?.UpdateEnergyText(); // nullチェックを追加
+        TapController.Instance?.UpdateEnergyText();
         Debug.Log($"DecreaseEnergy: Energy decreased to {currentEnergy}");
     }
 
@@ -58,7 +58,7 @@ public class EnergyManager : MonoBehaviour
             currentEnergy = maxEnergy;
         }
 
-        TapController.Instance?.UpdateEnergyText(); // nullチェックを追加
+        TapController.Instance?.UpdateEnergyText();
         Debug.Log($"IncreaseEnergy: Energy increased to {currentEnergy}");
     }
 
@@ -75,7 +75,7 @@ public class EnergyManager : MonoBehaviour
                 {
                     currentEnergy = maxEnergy;
                 }
-                TapController.Instance?.UpdateEnergyText(); // nullチェックを追加
+                TapController.Instance?.UpdateEnergyText();
                 Debug.Log($"IncreaseEnergyOverTime: Energy increased to {currentEnergy} by {energyIncreaseAmount}");
             }
         }
