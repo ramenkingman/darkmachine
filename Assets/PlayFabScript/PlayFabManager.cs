@@ -64,7 +64,14 @@ public class PlayFabManager : MonoBehaviour
     private void OnApplicationQuit()
     {
         SaveLastSessionEndTime();
-        SavePlayerDataImmediate(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, XFollowToSave, InvitationToSave, BotManager.Instance.GetBotLevels(), EnergyManager.Instance.CurrentEnergy);
+        if (_isDataLoaded)
+        {
+            SavePlayerDataImmediate(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, XFollowToSave, InvitationToSave, BotManager.Instance.GetBotLevels(), EnergyManager.Instance.CurrentEnergy);
+        }
+        else
+        {
+            Debug.LogWarning("データがロードされていないため、保存できませんでした。");
+        }
         Debug.Log("Data saved on application quit.");
     }
 
@@ -277,7 +284,7 @@ public class PlayFabManager : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(2); // 2秒ごとにデータを自動保存
-            if (_dataChanged && !_isSavingData)
+            if (_dataChanged && !_isSavingData && _isDataLoaded)
             {
                 StartCoroutine(SavePlayerDataCoroutine());
                 _dataChanged = false;
@@ -312,7 +319,7 @@ public class PlayFabManager : MonoBehaviour
                 ScoreManager.Instance.SetScore(score);
             }
 
-            if (result.Data.TryGetValue("PlayerLevel", out var playerLevelData))
+            if (LevelManager.Instance != null && result.Data.TryGetValue("PlayerLevel", out var playerLevelData))
             {
                 int playerLevel = int.Parse(playerLevelData.Value);
                 Debug.Log($"Loading PlayerLevel: {playerLevel}");
