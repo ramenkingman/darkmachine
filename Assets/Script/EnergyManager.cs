@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using System.Collections;
 
 public class EnergyManager : MonoBehaviour
@@ -36,6 +35,9 @@ public class EnergyManager : MonoBehaviour
         currentEnergy = energy;
         TapController.Instance?.UpdateEnergyText(); // nullチェックを追加
         Debug.Log($"SetCurrentEnergy: Energy set to {currentEnergy}");
+
+        // スタミナが変更されたことを通知
+        PlayFabManager.Instance.SavePlayerData(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, PlayFabManager.Instance.XFollowToSave, PlayFabManager.Instance.InvitationToSave, BotManager.Instance.GetBotLevels(), currentEnergy);
     }
 
     public void DecreaseEnergy(int amount)
@@ -48,6 +50,9 @@ public class EnergyManager : MonoBehaviour
 
         TapController.Instance?.UpdateEnergyText(); // nullチェックを追加
         Debug.Log($"DecreaseEnergy: Energy decreased to {currentEnergy}");
+
+        // スタミナが変更されたことを通知
+        PlayFabManager.Instance.SavePlayerData(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, PlayFabManager.Instance.XFollowToSave, PlayFabManager.Instance.InvitationToSave, BotManager.Instance.GetBotLevels(), currentEnergy);
     }
 
     public void IncreaseEnergy(int amount)
@@ -60,6 +65,9 @@ public class EnergyManager : MonoBehaviour
 
         TapController.Instance?.UpdateEnergyText(); // nullチェックを追加
         Debug.Log($"IncreaseEnergy: Energy increased to {currentEnergy}");
+
+        // スタミナが変更されたことを通知
+        PlayFabManager.Instance.SavePlayerData(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, PlayFabManager.Instance.XFollowToSave, PlayFabManager.Instance.InvitationToSave, BotManager.Instance.GetBotLevels(), currentEnergy);
     }
 
     private IEnumerator IncreaseEnergyOverTime()
@@ -77,6 +85,9 @@ public class EnergyManager : MonoBehaviour
                 }
                 TapController.Instance?.UpdateEnergyText(); // nullチェックを追加
                 Debug.Log($"IncreaseEnergyOverTime: Energy increased to {currentEnergy} by {energyIncreaseAmount}");
+
+                // スタミナが変更されたことを通知
+                PlayFabManager.Instance.SavePlayerData(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, PlayFabManager.Instance.XFollowToSave, PlayFabManager.Instance.InvitationToSave, BotManager.Instance.GetBotLevels(), currentEnergy);
             }
         }
     }

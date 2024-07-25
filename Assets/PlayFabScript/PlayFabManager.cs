@@ -47,6 +47,7 @@ public class PlayFabManager : MonoBehaviour
 
     void Start()
     {
+        _isDataLoaded = false; // 初期化
         Login();
         StartCoroutine(WaitForLoginThenCalculateOfflineTime());
         StartCoroutine(AutoSaveData());
@@ -133,6 +134,7 @@ public class PlayFabManager : MonoBehaviour
         if (_shouldCreateAccount && !result.NewlyCreated)
         {
             Debug.LogWarning("CustomId :" + _customID + "は既に使われています。");
+            // カスタムIDの再生成や他の対応をここで行う
             return;
         }
 
@@ -229,6 +231,12 @@ public class PlayFabManager : MonoBehaviour
             request.Data.Add(botLevel.Key, botLevel.Value.ToString());
         }
 
+        Debug.Log("Saving player data:");
+        foreach (var data in request.Data)
+        {
+            Debug.Log($"Key: {data.Key}, Value: {data.Value}");
+        }
+
         PlayFabClientAPI.UpdateUserData(request, OnDataSend, OnError);
     }
 
@@ -276,8 +284,10 @@ public class PlayFabManager : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(2); // 2秒ごとにデータを自動保存
-            if (_dataChanged && !_isSavingData)
+            yield return new WaitForSeconds(5); // 5秒ごとにデータを自動保存
+
+            // データがロードされているかどうかを確認
+            if (_isDataLoaded && _dataChanged && !_isSavingData)
             {
                 StartCoroutine(SavePlayerDataCoroutine());
                 _dataChanged = false;
@@ -308,20 +318,43 @@ public class PlayFabManager : MonoBehaviour
 
             if (ScoreManager.Instance != null && result.Data.TryGetValue("Score", out var scoreData))
             {
-                int score = int.Parse(scoreData.Value);
-                ScoreManager.Instance.SetScore(score);
+                int score;
+                if (int.TryParse(scoreData.Value, out score))
+                {
+                    ScoreManager.Instance.SetScore(score);
+                }
+                else
+                {
+                    Debug.LogWarning("Scoreの値が不正です: " + scoreData.Value);
+                }
             }
 
             if (result.Data.TryGetValue("PlayerLevel", out var playerLevelData))
             {
-                int playerLevel = int.Parse(playerLevelData.Value);
-                Debug.Log($"Loading PlayerLevel: {playerLevel}");
-                LevelManager.Instance.SetPlayerLevel(playerLevel);
+                int playerLevel;
+                if (int.TryParse(playerLevelData.Value, out playerLevel))
+                {
+                    Debug.Log($"Loading PlayerLevel: {playerLevel}");
+                    LevelManager.Instance.SetPlayerLevel(playerLevel);
+                }
+                else
+                {
+                    Debug.LogWarning("PlayerLevelの値が不正です: " + playerLevelData.Value);
+                }
             }
 
             if (result.Data.TryGetValue("XFollow", out var xFollowData))
             {
-                _xFollowToSave = int.Parse(xFollowData.Value);
+                int xFollow;
+                if (int.TryParse(xFollowData.Value, out xFollow))
+                {
+                    _xFollowToSave = xFollow;
+                }
+                else
+                {
+                    Debug.LogWarning("XFollowの値が不正です: " + xFollowData.Value);
+                    _xFollowToSave = 0;
+                }
             }
             else
             {
@@ -330,7 +363,16 @@ public class PlayFabManager : MonoBehaviour
 
             if (result.Data.TryGetValue("Invitation", out var invitationData))
             {
-                _invitationToSave = int.Parse(invitationData.Value);
+                int invitation;
+                if (int.TryParse(invitationData.Value, out invitation))
+                {
+                    _invitationToSave = invitation;
+                }
+                else
+                {
+                    Debug.LogWarning("Invitationの値が不正です: " + invitationData.Value);
+                    _invitationToSave = 0;
+                }
             }
             else
             {
@@ -339,9 +381,16 @@ public class PlayFabManager : MonoBehaviour
 
             if (result.Data.TryGetValue("CurrentEnergy", out var currentEnergyData))
             {
-                int loadedEnergy = int.Parse(currentEnergyData.Value);
-                Debug.Log($"Loaded energy: {loadedEnergy}");
-                EnergyManager.Instance.SetCurrentEnergy(loadedEnergy); // エネルギーのロード
+                int loadedEnergy;
+                if (int.TryParse(currentEnergyData.Value, out loadedEnergy))
+                {
+                    Debug.Log($"Loaded energy: {loadedEnergy}");
+                    EnergyManager.Instance.SetCurrentEnergy(loadedEnergy);
+                }
+                else
+                {
+                    Debug.LogWarning("CurrentEnergyの値が不正です: " + currentEnergyData.Value);
+                }
             }
 
             if (BotManager.Instance != null)
@@ -350,19 +399,26 @@ public class PlayFabManager : MonoBehaviour
                 {
                     if (data.Key.StartsWith("Bot_"))
                     {
-                        int level = int.Parse(data.Value.Value);
-                        BotManager.Instance.SetBotLevel(data.Key, level);
+                        int level;
+                        if (int.TryParse(data.Value.Value, out level))
+                        {
+                            BotManager.Instance.SetBotLevel(data.Key, level);
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"Bot levelの値が不正です: Key: {data.Key}, Value: {data.Value.Value}");
+                        }
                     }
                 }
             }
 
-            _isDataLoaded = true;
+            _isDataLoaded = true; // データロード完了フラグを設定
             Debug.Log("プレイヤーデータが正常に読み込まれました！");
         }
         else
         {
             Debug.Log("プレイヤーデータが見つかりません。");
-            _isDataLoaded = true;
+            _isDataLoaded = true; // データロード完了フラグを設定
         }
     }
 
