@@ -1,12 +1,10 @@
 using UnityEngine;
 using TMPro;
 
-
 public class KeyboardInputHandler : MonoBehaviour
 {
     public TMP_InputField inputField;
     private TouchScreenKeyboard keyboard;
-
 
     void Start()
     {
@@ -16,10 +14,8 @@ public class KeyboardInputHandler : MonoBehaviour
             return;
         }
 
-
         inputField.onSelect.AddListener(OnInputFieldSelected);
     }
-
 
     void OnDestroy()
     {
@@ -29,24 +25,26 @@ public class KeyboardInputHandler : MonoBehaviour
         }
     }
 
-
     private void OnInputFieldSelected(string text)
     {
-        if (keyboard == null || !keyboard.active)
+        if (keyboard == null || keyboard.status != TouchScreenKeyboard.Status.Visible)
         {
-            keyboard = TouchScreenKeyboard.Open(inputField.text, TouchScreenKeyboardType.Default);
+            keyboard = TouchScreenKeyboard.Open(inputField.text, TouchScreenKeyboardType.Default, autocorrection: false, multiline: false, secure: false, alert: false, inputField.placeholder.GetComponent<TMP_Text>().text);
         }
     }
-
 
     void Update()
     {
-        if (keyboard != null && keyboard.active)
+        if (keyboard != null)
         {
-            inputField.text = keyboard.text;
+            if (keyboard.status == TouchScreenKeyboard.Status.Visible)
+            {
+                inputField.text = keyboard.text;
+            }
+            else if (keyboard.status == TouchScreenKeyboard.Status.Done || keyboard.status == TouchScreenKeyboard.Status.Canceled)
+            {
+                keyboard = null;
+            }
         }
     }
 }
-
-
-
