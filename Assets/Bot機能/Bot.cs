@@ -1,5 +1,3 @@
-using UnityEngine;
-
 public class Bot
 {
     public string Name { get; private set; }
@@ -71,16 +69,9 @@ public class Bot
 
     public void SetLevel(int level)
     {
-        if (level > Level) // 新しいレベルが現在のレベルより高い場合のみ更新
+        if (level >= 0 && level <= levelCosts.Length)
         {
-            if (level >= 0 && level <= levelCosts.Length)
-            {
-                Level = level;
-            }
-        }
-        else
-        {
-            Debug.LogWarning("New level is lower than the current level. Level update ignored.");
+            Level = level;
         }
     }
 }

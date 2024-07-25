@@ -122,16 +122,9 @@ public class LevelManager : MonoBehaviour
 
     public void SetPlayerLevel(int level)
     {
-        if (level > PlayerLevel) // 新しいレベルが現在のレベルより高い場合のみ更新
-        {
-            PlayerLevel = level;
-            UpdateScoreIncreaseAmount();
-            UpdateLevelUpCost();
-            Debug.Log($"Player level set to {level}");
-        }
-        else
-        {
-            Debug.LogWarning("New level is lower than the current level. Level update ignored.");
-        }
+        PlayerLevel = level;
+        UpdateScoreIncreaseAmount();
+        UpdateLevelUpCost();
+        Debug.Log($"Player level set to {level}");
     }
 }
