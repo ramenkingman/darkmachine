@@ -106,7 +106,8 @@ public class PlayFabManager : MonoBehaviour
 
     private int CalculateEnergyForOfflineDuration(TimeSpan offlineDuration)
     {
-        int energyRecoveryRate = LevelManager.Instance.ScoreIncreaseAmount;
+        // プレイヤーレベルに基づいたスタミナ回復量を計算
+        int energyRecoveryRate = LevelManager.Instance.ScoreIncreaseAmount; // スコア増加量と同じ
         return (int)(offlineDuration.TotalSeconds * energyRecoveryRate);
     }
 
@@ -116,6 +117,7 @@ public class PlayFabManager : MonoBehaviour
         var bots = BotManager.Instance.GetBots();
         foreach (var bot in bots)
         {
+            // 元の1時間単位に戻す
             int botCoins = bot.GetCurrentScorePerHour() * (int)offlineDuration.TotalHours;
             totalCoinsToAdd += botCoins;
             Debug.Log($"Bot: {bot.Name}, Level: {bot.Level}, Coins Added: {botCoins}");
@@ -174,7 +176,7 @@ public class PlayFabManager : MonoBehaviour
         }
         else
         {
-            _customID = id;
+            _customID = id; // 修正：既存のカスタムIDをセットする
         }
 
         return id;
@@ -235,19 +237,6 @@ public class PlayFabManager : MonoBehaviour
         }
 
         PlayFabClientAPI.UpdateUserData(request, OnDataSend, OnError);
-
-        // ローカルストレージにも保存
-        SavePlayerDataLocal(playerLevel, botLevels);
-    }
-
-    private void SavePlayerDataLocal(int playerLevel, Dictionary<string, int> botLevels)
-    {
-        PlayerPrefs.SetInt("PlayerLevel", playerLevel);
-        foreach (var botLevel in botLevels)
-        {
-            PlayerPrefs.SetInt(botLevel.Key, botLevel.Value);
-        }
-        PlayerPrefs.Save();
     }
 
     private IEnumerator SavePlayerDataCoroutine()
@@ -343,7 +332,7 @@ public class PlayFabManager : MonoBehaviour
             }
             else
             {
-                _xFollowToSave = 0;
+                _xFollowToSave = 0; // デフォルト値
             }
 
             if (result.Data.TryGetValue("Invitation", out var invitationData))
@@ -352,14 +341,14 @@ public class PlayFabManager : MonoBehaviour
             }
             else
             {
-                _invitationToSave = 0;
+                _invitationToSave = 0; // デフォルト値
             }
 
             if (result.Data.TryGetValue("CurrentEnergy", out var currentEnergyData))
             {
                 int loadedEnergy = int.Parse(currentEnergyData.Value);
                 Debug.Log($"Loaded energy: {loadedEnergy}");
-                EnergyManager.Instance.SetCurrentEnergy(loadedEnergy);
+                EnergyManager.Instance.SetCurrentEnergy(loadedEnergy); // エネルギーのロード
             }
 
             if (BotManager.Instance != null)
@@ -379,27 +368,8 @@ public class PlayFabManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("プレイヤーデータが見つかりません。ローカルデータを使用します。");
-            LoadPlayerDataLocal();
+            Debug.Log("プレイヤーデータが見つかりません。");
             _isDataLoaded = true;
-        }
-    }
-
-    private void LoadPlayerDataLocal()
-    {
-        if (PlayerPrefs.HasKey("PlayerLevel"))
-        {
-            int playerLevel = PlayerPrefs.GetInt("PlayerLevel");
-            LevelManager.Instance.SetPlayerLevel(playerLevel);
-        }
-
-        foreach (var botLevelKey in BotManager.Instance.GetBotLevels().Keys)
-        {
-            if (PlayerPrefs.HasKey(botLevelKey))
-            {
-                int botLevel = PlayerPrefs.GetInt(botLevelKey);
-                BotManager.Instance.SetBotLevel(botLevelKey, botLevel);
-            }
         }
     }
 
