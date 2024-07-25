@@ -8,7 +8,6 @@ public class EnergyManager : MonoBehaviour
 
     private int currentEnergy = 2000; // 初期エネルギー
     private int maxEnergy = 2000; // 最大エネルギー
-    private bool isEnergyRecovered = false; // オフライン回復の制御フラグ
 
     private void Awake()
     {
@@ -34,10 +33,9 @@ public class EnergyManager : MonoBehaviour
 
     public void SetCurrentEnergy(int energy)
     {
-        Debug.Log($"Before SetCurrentEnergy: {currentEnergy}");
         currentEnergy = energy;
         TapController.Instance?.UpdateEnergyText(); // nullチェックを追加
-        Debug.Log($"After SetCurrentEnergy: {currentEnergy}");
+        Debug.Log($"SetCurrentEnergy: Energy set to {currentEnergy}");
     }
 
     public void DecreaseEnergy(int amount)
@@ -69,7 +67,7 @@ public class EnergyManager : MonoBehaviour
         while (true)
         {
             yield return new WaitForSeconds(1f);
-            if (!isEnergyRecovered && currentEnergy < maxEnergy)
+            if (currentEnergy < maxEnergy)
             {
                 int energyIncreaseAmount = LevelManager.Instance.ScoreIncreaseAmount;
                 currentEnergy += energyIncreaseAmount;
@@ -81,10 +79,5 @@ public class EnergyManager : MonoBehaviour
                 Debug.Log($"IncreaseEnergyOverTime: Energy increased to {currentEnergy} by {energyIncreaseAmount}");
             }
         }
-    }
-
-    public void MarkEnergyRecovered()
-    {
-        isEnergyRecovered = true;
     }
 }

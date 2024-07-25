@@ -78,7 +78,7 @@ public class PlayFabManager : MonoBehaviour
     private void SaveLastSessionEndTime()
     {
         DateTime currentTime = DateTime.UtcNow;
-        PlayerPrefs.SetString(lastSessionEndTimeKey, currentTime.ToString("o")); // ISO 8601形式で保存
+        PlayerPrefs.SetString(lastSessionEndTimeKey, currentTime.ToString());
         PlayerPrefs.Save();
         Debug.Log($"Saved last session end time: {currentTime}");
     }
@@ -87,23 +87,16 @@ public class PlayFabManager : MonoBehaviour
     {
         if (PlayerPrefs.HasKey(lastSessionEndTimeKey))
         {
-            string lastSessionEndTimeString = PlayerPrefs.GetString(lastSessionEndTimeKey);
-            if (DateTime.TryParse(lastSessionEndTimeString, null, System.Globalization.DateTimeStyles.RoundtripKind, out DateTime lastSessionEndTime))
-            {
-                TimeSpan offlineDuration = DateTime.UtcNow - lastSessionEndTime;
-                Debug.Log($"Offline Duration: {offlineDuration.TotalSeconds} seconds");
+            DateTime lastSessionEndTime = DateTime.Parse(PlayerPrefs.GetString(lastSessionEndTimeKey));
+            TimeSpan offlineDuration = DateTime.UtcNow - lastSessionEndTime;
 
-                int energyToAdd = CalculateEnergyForOfflineDuration(offlineDuration);
-                Debug.Log($"Energy to add: {energyToAdd} (Recovery Rate: {LevelManager.Instance.ScoreIncreaseAmount} per second)");
-                EnergyManager.Instance.IncreaseEnergy(energyToAdd);
-                EnergyManager.Instance.MarkEnergyRecovered();
+            Debug.Log($"Offline Duration: {offlineDuration.TotalSeconds} seconds");
 
-                CalculateBotEarnings(offlineDuration);
-            }
-            else
-            {
-                Debug.LogError("Failed to parse last session end time.");
-            }
+            int energyToAdd = CalculateEnergyForOfflineDuration(offlineDuration);
+            Debug.Log($"Energy to add: {energyToAdd} (Recovery Rate: {LevelManager.Instance.ScoreIncreaseAmount} per second)");
+            EnergyManager.Instance.IncreaseEnergy(energyToAdd);
+
+            CalculateBotEarnings(offlineDuration);
         }
         else
         {
