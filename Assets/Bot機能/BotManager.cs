@@ -1,7 +1,7 @@
 using System.Collections;
-using System.Collections.Generic; // Dictionary, List
+using System.Collections.Generic;
 using UnityEngine;
-using TMPro; // TextMeshProUGUI
+using TMPro; // TextMeshProUGUI 用の名前空間
 
 public class BotManager : MonoBehaviour
 {

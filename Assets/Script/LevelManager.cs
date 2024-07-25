@@ -1,6 +1,6 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class LevelManager : MonoBehaviour
 {
@@ -86,7 +86,10 @@ public class LevelManager : MonoBehaviour
             UpdateLevelUpCost();
 
             // レベルアップしたときにデータを保存
-            PlayFabManager.Instance.SavePlayerData(ScoreManager.Instance.Score, PlayerLevel, PlayFabManager.Instance.XFollowToSave, PlayFabManager.Instance.InvitationToSave); // 修正
+            int xFollow = PlayFabManager.Instance.XFollowToSave;
+            int invitation = PlayFabManager.Instance.InvitationToSave;
+            int currentEnergy = EnergyManager.Instance.CurrentEnergy; // 追加
+            PlayFabManager.Instance.SavePlayerData(ScoreManager.Instance.Score, PlayerLevel, xFollow, invitation, BotManager.Instance.GetBotLevels(), currentEnergy); // 追加
         }
     }
 
