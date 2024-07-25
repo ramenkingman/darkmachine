@@ -284,7 +284,7 @@ public class PlayFabManager : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(5); // 5秒ごとにデータを自動保存
+            yield return new WaitForSeconds(2); // 2秒ごとにデータを自動保存
 
             // データがロードされているかどうかを確認
             if (_isDataLoaded && _dataChanged && !_isSavingData)
