@@ -51,6 +51,9 @@ public class TapController : MonoBehaviour
 
         // エネルギーテキストの初期化
         UpdateEnergyText();
+
+        // 2秒後にスコアを1増やすコルーチンを開始
+        StartCoroutine(AddScoreAfterDelay(2.0f, 1));
     }
 
     public void OnChipTap(BaseEventData eventData)
@@ -143,5 +146,12 @@ public class TapController : MonoBehaviour
                 availableSource.Play();
             }
         }
+    }
+
+    private IEnumerator AddScoreAfterDelay(float delay, int score)
+    {
+        yield return new WaitForSeconds(delay);
+        ScoreManager.Instance.AddScore(score);
+        Debug.Log($"Score increased by {score} after {delay} seconds");
     }
 }
