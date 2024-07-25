@@ -89,6 +89,7 @@ public class PlayFabManager : MonoBehaviour
             int energyToAdd = CalculateEnergyForOfflineDuration(offlineDuration);
             Debug.Log($"Energy to add: {energyToAdd} (Recovery Rate: {LevelManager.Instance.ScoreIncreaseAmount} per second)");
             EnergyManager.Instance.IncreaseEnergy(energyToAdd);
+            Debug.Log($"New Energy Level: {EnergyManager.Instance.CurrentEnergy}");
 
             CalculateBotEarnings(offlineDuration);
         }
@@ -102,7 +103,9 @@ public class PlayFabManager : MonoBehaviour
     {
         // プレイヤーレベルに基づいたスタミナ回復量を計算
         int energyRecoveryRate = LevelManager.Instance.ScoreIncreaseAmount; // スコア増加量と同じ
-        return (int)(offlineDuration.TotalSeconds * energyRecoveryRate);
+        int energyToAdd = (int)(offlineDuration.TotalSeconds * energyRecoveryRate);
+        Debug.Log($"Calculated energy to add: {energyToAdd} for offline duration: {offlineDuration.TotalSeconds} seconds");
+        return energyToAdd;
     }
 
     private void CalculateBotEarnings(TimeSpan offlineDuration)
@@ -305,122 +308,131 @@ public class PlayFabManager : MonoBehaviour
         PlayFabClientAPI.GetUserData(request, OnDataReceived, OnError);
     }
 
-    private void OnDataReceived(GetUserDataResult result)
+   private void OnDataReceived(GetUserDataResult result)
+{
+    Debug.Log("OnDataReceived called");
+
+    if (result.Data != null)
     {
-        Debug.Log("OnDataReceived called");
-
-        if (result.Data != null)
+        foreach (var kvp in result.Data)
         {
-            foreach (var kvp in result.Data)
-            {
-                Debug.Log($"Key: {kvp.Key}, Value: {kvp.Value.Value}");
-            }
+            Debug.Log($"Key: {kvp.Key}, Value: {kvp.Value.Value}");
+        }
 
-            if (ScoreManager.Instance != null && result.Data.TryGetValue("Score", out var scoreData))
+        if (ScoreManager.Instance != null && result.Data.TryGetValue("Score", out var scoreData))
+        {
+            int score;
+            if (int.TryParse(scoreData.Value, out score))
             {
-                int score;
-                if (int.TryParse(scoreData.Value, out score))
-                {
-                    ScoreManager.Instance.SetScore(score);
-                }
-                else
-                {
-                    Debug.LogWarning("Scoreの値が不正です: " + scoreData.Value);
-                }
-            }
-
-            if (result.Data.TryGetValue("PlayerLevel", out var playerLevelData))
-            {
-                int playerLevel;
-                if (int.TryParse(playerLevelData.Value, out playerLevel))
-                {
-                    Debug.Log($"Loading PlayerLevel: {playerLevel}");
-                    LevelManager.Instance.SetPlayerLevel(playerLevel);
-                }
-                else
-                {
-                    Debug.LogWarning("PlayerLevelの値が不正です: " + playerLevelData.Value);
-                }
-            }
-
-            if (result.Data.TryGetValue("XFollow", out var xFollowData))
-            {
-                int xFollow;
-                if (int.TryParse(xFollowData.Value, out xFollow))
-                {
-                    _xFollowToSave = xFollow;
-                }
-                else
-                {
-                    Debug.LogWarning("XFollowの値が不正です: " + xFollowData.Value);
-                    _xFollowToSave = 0;
-                }
+                ScoreManager.Instance.SetScore(score);
             }
             else
             {
-                _xFollowToSave = 0; // デフォルト値
+                Debug.LogWarning("Scoreの値が不正です: " + scoreData.Value);
             }
+        }
 
-            if (result.Data.TryGetValue("Invitation", out var invitationData))
+        if (result.Data.TryGetValue("PlayerLevel", out var playerLevelData))
+        {
+            int playerLevel;
+            if (int.TryParse(playerLevelData.Value, out playerLevel))
             {
-                int invitation;
-                if (int.TryParse(invitationData.Value, out invitation))
-                {
-                    _invitationToSave = invitation;
-                }
-                else
-                {
-                    Debug.LogWarning("Invitationの値が不正です: " + invitationData.Value);
-                    _invitationToSave = 0;
-                }
+                Debug.Log($"Loading PlayerLevel: {playerLevel}");
+                LevelManager.Instance.SetPlayerLevel(playerLevel);
             }
             else
             {
-                _invitationToSave = 0; // デフォルト値
+                Debug.LogWarning("PlayerLevelの値が不正です: " + playerLevelData.Value);
             }
+        }
 
-            if (result.Data.TryGetValue("CurrentEnergy", out var currentEnergyData))
+        if (result.Data.TryGetValue("XFollow", out var xFollowData))
+        {
+            int xFollow;
+            if (int.TryParse(xFollowData.Value, out xFollow))
             {
-                int loadedEnergy;
-                if (int.TryParse(currentEnergyData.Value, out loadedEnergy))
-                {
-                    Debug.Log($"Loaded energy: {loadedEnergy}");
-                    EnergyManager.Instance.SetCurrentEnergy(loadedEnergy);
-                }
-                else
-                {
-                    Debug.LogWarning("CurrentEnergyの値が不正です: " + currentEnergyData.Value);
-                }
+                _xFollowToSave = xFollow;
             }
-
-            if (BotManager.Instance != null)
+            else
             {
-                foreach (var data in result.Data)
-                {
-                    if (data.Key.StartsWith("Bot_"))
-                    {
-                        int level;
-                        if (int.TryParse(data.Value.Value, out level))
-                        {
-                            BotManager.Instance.SetBotLevel(data.Key, level);
-                        }
-                        else
-                        {
-                            Debug.LogWarning($"Bot levelの値が不正です: Key: {data.Key}, Value: {data.Value.Value}");
-                        }
-                    }
-                }
+                Debug.LogWarning("XFollowの値が不正です: " + xFollowData.Value);
+                _xFollowToSave = 0;
             }
-
-            _isDataLoaded = true; // データロード完了フラグを設定
-            Debug.Log("プレイヤーデータが正常に読み込まれました！");
         }
         else
         {
-            Debug.Log("プレイヤーデータが見つかりません。");
-            _isDataLoaded = true; // データロード完了フラグを設定
+            _xFollowToSave = 0; // デフォルト値
         }
+
+        if (result.Data.TryGetValue("Invitation", out var invitationData))
+        {
+            int invitation;
+            if (int.TryParse(invitationData.Value, out invitation))
+            {
+                _invitationToSave = invitation;
+            }
+            else
+            {
+                Debug.LogWarning("Invitationの値が不正です: " + invitationData.Value);
+                _invitationToSave = 0;
+            }
+        }
+        else
+        {
+            _invitationToSave = 0; // デフォルト値
+        }
+
+        if (result.Data.TryGetValue("CurrentEnergy", out var currentEnergyData))
+        {
+            int loadedEnergy;
+            if (int.TryParse(currentEnergyData.Value, out loadedEnergy))
+            {
+                Debug.Log($"Loaded energy: {loadedEnergy}");
+
+                // オフライン期間に基づいたスタミナ回復を適用
+                DateTime lastSessionEndTime = PlayerPrefs.HasKey(lastSessionEndTimeKey) ? DateTime.Parse(PlayerPrefs.GetString(lastSessionEndTimeKey)) : DateTime.UtcNow;
+                TimeSpan offlineDuration = DateTime.UtcNow - lastSessionEndTime;
+                int energyToAdd = CalculateEnergyForOfflineDuration(offlineDuration);
+                loadedEnergy += energyToAdd;
+
+                EnergyManager.Instance.SetCurrentEnergy(loadedEnergy);
+                Debug.Log($"Energy after recovery: {loadedEnergy}");
+            }
+            else
+            {
+                Debug.LogWarning("CurrentEnergyの値が不正です: " + currentEnergyData.Value);
+            }
+        }
+
+        if (BotManager.Instance != null)
+        {
+            foreach (var data in result.Data)
+            {
+                if (data.Key.StartsWith("Bot_"))
+                {
+                    int level;
+                    if (int.TryParse(data.Value.Value, out level))
+                    {
+                        BotManager.Instance.SetBotLevel(data.Key, level);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Bot levelの値が不正です: Key: {data.Key}, Value: {data.Value.Value}");
+                    }
+                }
+            }
+        }
+
+        _isDataLoaded = true; // データロード完了フラグを設定
+        Debug.Log("プレイヤーデータが正常に読み込まれました！");
     }
+    else
+    {
+        Debug.Log("プレイヤーデータが見つかりません。");
+        _isDataLoaded = true; // データロード完了フラグを設定
+    }
+}
+
 
     public bool IsDataLoaded()
     {
