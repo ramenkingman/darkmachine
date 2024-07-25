@@ -292,7 +292,7 @@ public class PlayFabManager : MonoBehaviour
             // データがロードされているかどうかを確認
             if (_isDataLoaded && _dataChanged && !_isSavingData)
             {
-                StartCoroutine(SavePlayerDataCoroutine());
+                SavePlayerDataImmediate(_scoreToSave, _playerLevelToSave, _xFollowToSave, _invitationToSave, _botLevelsToSave, _currentEnergyToSave);
                 _dataChanged = false;
             }
         }

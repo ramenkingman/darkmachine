@@ -78,6 +78,9 @@ public class TapController : MonoBehaviour
         Debug.Log("Score increased at position: " + localPoint); // デバッグログを追加
 
         PlayTapSound(); // タップ音を再生
+
+        // データの変更を通知
+        PlayFabManager.Instance.MarkDataChanged();
     }
 
     public void UpdateEnergyText()
