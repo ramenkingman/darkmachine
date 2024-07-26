@@ -426,6 +426,7 @@ GameObject:
   - component: {fileID: 266084038}
   - component: {fileID: 266084037}
   - component: {fileID: 266084039}
+  - component: {fileID: 266084041}
   - component: {fileID: 266084040}
   m_Layer: 5
   m_Name: Task
@@ -537,7 +538,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 266084041}
         m_TargetAssemblyTypeName: SceneLoader, Assembly-CSharp
         m_MethodName: LoadScene
         m_Mode: 5
@@ -573,6 +574,18 @@ MonoBehaviour:
   selectedSprite: {fileID: 21300000, guid: 5611ffd66fc16ec419df3fb8af0794ee, type: 3}
   disabledSprite: {fileID: 21300000, guid: 2280fbd2e3f52f34f84ad3c5638526cf, type: 3}
   tapSound: {fileID: 8300000, guid: b8058acb5c58dd743bee66c8be5fbd4a, type: 3}
+--- !u!114 &266084041
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 266084035}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c598ac5d7aeb654b99b878287e937f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &315432901
 GameObject:
   m_ObjectHideFlags: 0
