@@ -127,9 +127,10 @@ public class PlayFabManager : MonoBehaviour
         var bots = BotManager.Instance.GetBots();
         foreach (var bot in bots)
         {
-            int botCoins = bot.GetCurrentScorePerHour() * (int)offlineDuration.TotalHours;
-            totalCoinsToAdd += botCoins;
-            Debug.Log($"Bot: {bot.Name}, Level: {bot.Level}, Coins Added: {botCoins}");
+        // 元の1時間単位に戻す
+        int botCoins = bot.GetCurrentScorePerHour() * (int)offlineDuration.TotalHours;
+        totalCoinsToAdd += botCoins;
+        Debug.Log($"Bot: {bot.Name}, Level: {bot.Level}, Coins Added: {botCoins}");
         }
 
         ScoreManager.Instance.AddScore(totalCoinsToAdd);
@@ -139,7 +140,6 @@ public class PlayFabManager : MonoBehaviour
     private void Login()
     {
         _customID = LoadCustomID();
-        Debug.Log("CustomID: " + _customID);
         var request = new LoginWithCustomIDRequest { CustomId = _customID, CreateAccount = _shouldCreateAccount };
         PlayFabClientAPI.LoginWithCustomID(request, OnLoginSuccess, OnLoginFailure);
     }
@@ -180,16 +180,12 @@ public class PlayFabManager : MonoBehaviour
 
         if (_shouldCreateAccount)
         {
-            id = GenerateCustomID();
-            _customID = id;
-            SaveCustomID();
+            return GenerateCustomID();
         }
         else
         {
-            _customID = id;
+            return id;
         }
-
-        return id;
     }
 
     private void SaveCustomID()
