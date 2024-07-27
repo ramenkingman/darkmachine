@@ -66,14 +66,7 @@ public class PlayFabManager : MonoBehaviour
         if (!hasFocus)
         {
             SaveLastSessionEndTime();
-            if (_isDataLoaded)
-            {
-                SavePlayerDataImmediate(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, XFollowToSave, InvitationToSave, BotManager.Instance.GetBotLevels(), EnergyManager.Instance.CurrentEnergy);
-            }
-            else
-            {
-                Debug.LogWarning("データがロードされていないため、保存できませんでした。");
-            }
+            SavePlayerDataImmediate(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, XFollowToSave, InvitationToSave, BotManager.Instance.GetBotLevels(), EnergyManager.Instance.CurrentEnergy);
             Debug.Log("Data saved on application losing focus.");
         }
     }
@@ -81,15 +74,14 @@ public class PlayFabManager : MonoBehaviour
     private void OnApplicationQuit()
     {
         SaveLastSessionEndTime();
-        if (_isDataLoaded)
-        {
-            SavePlayerDataImmediate(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, XFollowToSave, InvitationToSave, BotManager.Instance.GetBotLevels(), EnergyManager.Instance.CurrentEnergy);
-        }
-        else
-        {
-            Debug.LogWarning("データがロードされていないため、保存できませんでした。");
-        }
+        SavePlayerDataImmediate(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, XFollowToSave, InvitationToSave, BotManager.Instance.GetBotLevels(), EnergyManager.Instance.CurrentEnergy);
         Debug.Log("Data saved on application quit.");
+    }
+
+    private void OnDestroy()
+    {
+        Application.focusChanged -= OnApplicationFocusChanged;
+        Application.quitting -= OnApplicationQuit;
     }
 
     private void SaveLastSessionEndTime()
@@ -296,7 +288,7 @@ public class PlayFabManager : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(2); 
+            yield return new WaitForSeconds(1); 
             if (_dataChanged && !_isSavingData && _isDataLoaded)
             {
                 StartCoroutine(SavePlayerDataCoroutine());
@@ -362,6 +354,11 @@ public class PlayFabManager : MonoBehaviour
                 int loadedEnergy = int.Parse(currentEnergyData.Value);
                 Debug.Log($"Loaded energy: {loadedEnergy}");
                 EnergyManager.Instance.SetCurrentEnergy(loadedEnergy);
+            }
+            else
+            {
+                // ロードされたデータがない場合は、エネルギーをデフォルト値に設定しない
+                Debug.LogWarning("No CurrentEnergy data found, keeping the current value.");
             }
 
             if (BotManager.Instance != null)
