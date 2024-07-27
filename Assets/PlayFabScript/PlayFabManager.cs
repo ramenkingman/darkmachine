@@ -162,9 +162,6 @@ public class PlayFabManager : MonoBehaviour
         _playFabId = result.PlayFabId;
         _titlePlayerID = result.EntityToken.Entity.Id;
 
-        // Set the display name to the Master Player Account ID
-        UpdateDisplayName(_playFabId);
-
         LoadPlayerData();
     }
 
@@ -405,44 +402,5 @@ public class PlayFabManager : MonoBehaviour
     public void IncreaseXFollow(int amount)
     {
         _xFollowToSave += amount;
-    }
-
-    private void UpdateDisplayName(string displayName)
-    {
-        var request = new UpdateUserTitleDisplayNameRequest
-        {
-            DisplayName = displayName
-        };
-
-        PlayFabClientAPI.UpdateUserTitleDisplayName(request, OnDisplayNameUpdated, OnError);
-    }
-
-    private void OnDisplayNameUpdated(UpdateUserTitleDisplayNameResult result)
-    {
-        Debug.Log("Display name updated successfully to: " + result.DisplayName);
-        // After updating the display name, register it in the leaderboard
-        RegisterDisplayNameInLeaderboard(result.DisplayName);
-    }
-
-    private void RegisterDisplayNameInLeaderboard(string displayName)
-    {
-        var request = new UpdatePlayerStatisticsRequest
-        {
-            Statistics = new List<StatisticUpdate>
-            {
-                new StatisticUpdate
-                {
-                    StatisticName = "LeaderboardName", // Replace with your actual leaderboard name
-                    Value = 1 // This value can be any integer; typically, you might want to use the player's score or some other relevant metric
-                }
-            }
-        };
-
-        PlayFabClientAPI.UpdatePlayerStatistics(request, OnLeaderboardUpdated, OnError);
-    }
-
-    private void OnLeaderboardUpdated(UpdatePlayerStatisticsResult result)
-    {
-        Debug.Log("Leaderboard updated with the new display name.");
     }
 }

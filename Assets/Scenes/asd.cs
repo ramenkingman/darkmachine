@@ -1,126 +1,70 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using PlayFab;
-using PlayFab.ClientModels;
+using UnityEngine.EventSystems;
 
-public class LeaderboardCheck : MonoBehaviour
+public class SwipeControllerNew : MonoBehaviour
 {
-    public TMP_InputField inputField;
-    public Button checkButton;
-    public GameObject resultObject;
-    public GameObject errorObject;
-    public Button disableButton;
-
-    private string playerDisplayName;
+    public RectTransform startRect; // スワイプ開始位置
+    public RectTransform endRect;   // スワイプ終了位置
+    public float swipeDuration = 0.5f; // スワイプの持続時間
+    public float swipeInterval = 5f;   // スワイプの間隔
 
     void Start()
     {
-        checkButton.onClick.AddListener(OnCheckButtonClick);
-        playerDisplayName = PlayFabManager.Instance.GetMasterPlayerAccountID();
-        if (PlayerPrefs.GetInt("DisableButton", 0) == 1)
+        // スワイプのシミュレーションを開始
+        StartCoroutine(SwipeRoutine());
+    }
+
+    private IEnumerator SwipeRoutine()
+    {
+        while (true)
         {
-            disableButton.gameObject.SetActive(false);
+            yield return new WaitForSeconds(swipeInterval);
+
+            // スワイプの開始
+            SimulateSwipe(startRect.anchoredPosition, endRect.anchoredPosition);
         }
     }
 
-    private void OnCheckButtonClick()
+    private void SimulateSwipe(Vector2 start, Vector2 end)
     {
-        string inputName = inputField.text;
+        // タッチの開始
+        SimulateTouch(start, TouchPhase.Began);
 
-        if (string.IsNullOrEmpty(inputName))
+        // スワイプの途中経過
+        float elapsedTime = 0;
+        while (elapsedTime < swipeDuration)
         {
-            ShowErrorObject();
-            return;
+            elapsedTime += Time.deltaTime;
+            Vector2 currentPosition = Vector2.Lerp(start, end, elapsedTime / swipeDuration);
+            SimulateTouch(currentPosition, TouchPhase.Moved);
         }
 
-        GetLeaderboard(inputName);
+        // タッチの終了
+        SimulateTouch(end, TouchPhase.Ended);
     }
 
-    private void GetLeaderboard(string inputName)
+    private void SimulateTouch(Vector2 position, TouchPhase phase)
     {
-        var request = new GetLeaderboardRequest
+        // タッチ入力のシミュレーションを行うカスタムイベント
+        PointerEventData touchData = new PointerEventData(EventSystem.current)
         {
-            StatisticName = "LeaderboardName",
-            MaxResultsCount = 100
+            position = position
         };
 
-        PlayFabClientAPI.GetLeaderboard(request, result =>
+        GameObject target = EventSystem.current.currentSelectedGameObject;
+
+        switch (phase)
         {
-            bool nameFound = false;
-
-            foreach (var item in result.Leaderboard)
-            {
-                if (item.DisplayName == inputName)
-                {
-                    nameFound = true;
-                    if (item.PlayFabId != playerDisplayName)
-                    {
-                        IncreaseScore(item.PlayFabId);
-                    }
-                    else
-                    {
-                        ShowErrorObject();
-                        return;
-                    }
-                }
-            }
-
-            if (nameFound)
-            {
-                IncreaseScore(playerDisplayName);
-                ShowResultObject();
-            }
-            else
-            {
-                ShowErrorObject();
-            }
-        }, error =>
-        {
-            Debug.LogError("Error retrieving leaderboard: " + error.GenerateErrorReport());
-            ShowErrorObject();
-        });
-    }
-
-    private void IncreaseScore(string playFabId)
-    {
-        var request = new UpdatePlayerStatisticsRequest
-        {
-            Statistics = new List<StatisticUpdate>
-            {
-                new StatisticUpdate { StatisticName = "Score", Value = 10000 }
-            }
-        };
-
-        PlayFabClientAPI.UpdatePlayerStatistics(request, result =>
-        {
-            Debug.Log("Score increased successfully.");
-        }, error =>
-        {
-            Debug.LogError("Error updating score: " + error.GenerateErrorReport());
-        });
-    }
-
-    private void ShowResultObject()
-    {
-        resultObject.SetActive(true);
-        StartCoroutine(HideObjectAfterDelay(resultObject, 3f));
-        disableButton.gameObject.SetActive(false);
-        PlayerPrefs.SetInt("DisableButton", 1);
-        PlayerPrefs.Save();
-    }
-
-    private void ShowErrorObject()
-    {
-        errorObject.SetActive(true);
-        StartCoroutine(HideObjectAfterDelay(errorObject, 3f));
-    }
-
-    private IEnumerator HideObjectAfterDelay(GameObject obj, float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        obj.SetActive(false);
+            case TouchPhase.Began:
+                ExecuteEvents.Execute(target, touchData, ExecuteEvents.pointerDownHandler);
+                break;
+            case TouchPhase.Moved:
+                ExecuteEvents.Execute(target, touchData, ExecuteEvents.dragHandler);
+                break;
+            case TouchPhase.Ended:
+                ExecuteEvents.Execute(target, touchData, ExecuteEvents.pointerUpHandler);
+                break;
+        }
     }
 }
