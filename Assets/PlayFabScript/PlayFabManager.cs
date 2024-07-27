@@ -23,8 +23,6 @@ public class PlayFabManager : MonoBehaviour
     private int _currentEnergyToSave;
     private bool _dataChanged = false;
 
-    private DateTime _lastSavedTime; // 前回の保存時刻
-
     public int XFollowToSave => _xFollowToSave;
     public int InvitationToSave => _invitationToSave;
     public int CurrentEnergyToSave => _currentEnergyToSave;
@@ -225,8 +223,6 @@ public class PlayFabManager : MonoBehaviour
             return;
         }
 
-        _lastSavedTime = DateTime.UtcNow;
-
         var request = new UpdateUserDataRequest
         {
             Data = new Dictionary<string, string>
@@ -235,8 +231,7 @@ public class PlayFabManager : MonoBehaviour
                 { "PlayerLevel", playerLevel.ToString() },
                 { "XFollow", xFollow.ToString() },
                 { "Invitation", invitation.ToString() },
-                { "CurrentEnergy", currentEnergy.ToString() },
-                { "LastSavedTime", _lastSavedTime.ToString("o") } // ISO 8601形式で保存
+                { "CurrentEnergy", currentEnergy.ToString() }
             }
         };
 
@@ -260,8 +255,7 @@ public class PlayFabManager : MonoBehaviour
                 { "PlayerLevel", _playerLevelToSave.ToString() },
                 { "XFollow", _xFollowToSave.ToString() },
                 { "Invitation", _invitationToSave.ToString() },
-                { "CurrentEnergy", _currentEnergyToSave.ToString() },
-                { "LastSavedTime", _lastSavedTime.ToString("o") } // ISO 8601形式で保存
+                { "CurrentEnergy", _currentEnergyToSave.ToString() }
             }
         };
 
@@ -272,7 +266,7 @@ public class PlayFabManager : MonoBehaviour
 
         PlayFabClientAPI.UpdateUserData(request, OnDataSend, OnError);
 
-        yield return new WaitForSeconds(2);
+        yield return new WaitForSeconds(2); 
 
         _isSavingData = false;
     }
@@ -293,7 +287,7 @@ public class PlayFabManager : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(1);
+            yield return new WaitForSeconds(1); 
             if (_dataChanged && !_isSavingData && _isDataLoaded)
             {
                 StartCoroutine(SavePlayerDataCoroutine());
@@ -318,10 +312,9 @@ public class PlayFabManager : MonoBehaviour
 
         if (result.Data != null)
         {
-            DateTime lastSavedTime = DateTime.MinValue;
-            if (result.Data.TryGetValue("LastSavedTime", out var lastSavedTimeData))
+            foreach (var kvp in result.Data)
             {
-                lastSavedTime = DateTime.Parse(lastSavedTimeData.Value);
+                Debug.Log($"Key: {kvp.Key}, Value: {kvp.Value.Value}");
             }
 
             if (ScoreManager.Instance != null && result.Data.TryGetValue("Score", out var scoreData))
@@ -363,6 +356,7 @@ public class PlayFabManager : MonoBehaviour
             }
             else
             {
+                // ロードされたデータがない場合は、エネルギーをデフォルト値に設定しない
                 Debug.LogWarning("No CurrentEnergy data found, keeping the current value.");
             }
 
@@ -401,44 +395,5 @@ public class PlayFabManager : MonoBehaviour
     public void IncreaseXFollow(int amount)
     {
         _xFollowToSave += amount;
-    }
-
-    private void UpdateDisplayName(string displayName)
-    {
-        var request = new UpdateUserTitleDisplayNameRequest
-        {
-            DisplayName = displayName
-        };
-
-        PlayFabClientAPI.UpdateUserTitleDisplayName(request, OnDisplayNameUpdated, OnError);
-    }
-
-    private void OnDisplayNameUpdated(UpdateUserTitleDisplayNameResult result)
-    {
-        Debug.Log("Display name updated successfully to: " + result.DisplayName);
-        // After updating the display name, register it in the leaderboard
-        RegisterDisplayNameInLeaderboard(result.DisplayName);
-    }
-
-    private void RegisterDisplayNameInLeaderboard(string displayName)
-    {
-        var request = new UpdatePlayerStatisticsRequest
-        {
-            Statistics = new List<StatisticUpdate>
-            {
-                new StatisticUpdate
-                {
-                    StatisticName = "LeaderboardName", // Replace with your actual leaderboard name
-                    Value = 1 // This value can be any integer; typically, you might want to use the player's score or some other relevant metric
-                }
-            }
-        };
-
-        PlayFabClientAPI.UpdatePlayerStatistics(request, OnLeaderboardUpdated, OnError);
-    }
-
-    private void OnLeaderboardUpdated(UpdatePlayerStatisticsResult result)
-    {
-        Debug.Log("Leaderboard updated with the new display name.");
     }
 }
