@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: PlayFabEditorPrefsSO
   m_EditorClassIdentifier: 
   DevAccountEmail: openworld.honda@gmail.com
-  DevAccountToken: ycu9q4kjqkeiegaz15nqmmcdmeqbsaoqx1saxm1g3nkc7i5u6qips9ih3egmmf8dgmaci4umau8eqx4yqto98qeycdbgppz87d8bqm3pb7nnrwmj98zixxt6y86neyephm3gtcxdrwx5r1w4ok8npuw6zk98o7g1nyukt6ee7o78wxux4k8qy4oh3qwttdm8jtgu4d7a
-  SelectedStudio: 
+  DevAccountToken: n9quf4q3gie74qx435ytfyp4niw9rmwfr71yrdkuefepoqxbshskixhpypr7djyg5h5oghsacdezkz4i5499ffdbm4baxwui4busxwp6wt5ekf653muj4nkpuoxwukd7hxeofygnxsuuxoittq9uk9kw4bqeswyzzimzghhaz8857e9ru65x73c85rxr11sp4ueuibec
+  SelectedStudio: darkmachine
   SdkPath: Assets/PlayFabSDK
   EdExPath: 
   LocalCloudScriptPath: 
   PanelIsShown: 0
-  curMainMenuIdx: 0
+  curMainMenuIdx: 2
   curSubMenuIdx: 0
