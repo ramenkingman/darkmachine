@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using PlayFab;
 using PlayFab.ClientModels;
+using System.Runtime.InteropServices;
 
 public class PlayFabManager : MonoBehaviour
 {
@@ -30,6 +31,9 @@ public class PlayFabManager : MonoBehaviour
     private static readonly string CUSTOM_ID_SAVE_KEY = "CUSTOM_ID_SAVE_KEY_GAME2";
     private string lastSessionEndTimeKey = "LastSessionEndTime";
 
+    [DllImport("__Internal")]
+    private static extern void RegisterUnloadEvent();
+
     private void Awake()
     {
         if (Instance == null)
@@ -45,11 +49,15 @@ public class PlayFabManager : MonoBehaviour
         }
     }
 
-    void Start()
+    private void Start()
     {
         Login();
         StartCoroutine(WaitForLoginThenCalculateOfflineTime());
         StartCoroutine(AutoSaveData());
+
+        #if UNITY_WEBGL && !UNITY_EDITOR
+        RegisterUnloadEvent();
+        #endif
     }
 
     private IEnumerator WaitForLoginThenCalculateOfflineTime()
@@ -84,10 +92,10 @@ public class PlayFabManager : MonoBehaviour
         SavePlayerDataImmediate(
             ScoreManager.Instance.Score, 
             LevelManager.Instance.PlayerLevel, 
-            XFollowToSave, 
-            InvitationToSave, 
-            BotManager.Instance.GetBotLevels(), 
-            EnergyManager.Instance.CurrentEnergy
+                XFollowToSave, 
+                InvitationToSave, 
+                BotManager.Instance.GetBotLevels(), 
+                EnergyManager.Instance.CurrentEnergy
         );
         Debug.Log("Data saved on application quit.");
     }
