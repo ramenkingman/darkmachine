@@ -66,7 +66,14 @@ public class PlayFabManager : MonoBehaviour
         if (!hasFocus)
         {
             SaveLastSessionEndTime();
-            SavePlayerDataImmediate(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, XFollowToSave, InvitationToSave, BotManager.Instance.GetBotLevels(), EnergyManager.Instance.CurrentEnergy);
+            SavePlayerDataImmediate(
+                ScoreManager.Instance.Score, 
+                LevelManager.Instance.PlayerLevel, 
+                XFollowToSave, 
+                InvitationToSave, 
+                BotManager.Instance.GetBotLevels(), 
+                EnergyManager.Instance.CurrentEnergy
+            );
             Debug.Log("Data saved on application losing focus.");
         }
     }
@@ -74,7 +81,14 @@ public class PlayFabManager : MonoBehaviour
     private void OnApplicationQuit()
     {
         SaveLastSessionEndTime();
-        SavePlayerDataImmediate(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, XFollowToSave, InvitationToSave, BotManager.Instance.GetBotLevels(), EnergyManager.Instance.CurrentEnergy);
+        SavePlayerDataImmediate(
+            ScoreManager.Instance.Score, 
+            LevelManager.Instance.PlayerLevel, 
+            XFollowToSave, 
+            InvitationToSave, 
+            BotManager.Instance.GetBotLevels(), 
+            EnergyManager.Instance.CurrentEnergy
+        );
         Debug.Log("Data saved on application quit.");
     }
 
@@ -125,10 +139,9 @@ public class PlayFabManager : MonoBehaviour
         var bots = BotManager.Instance.GetBots();
         foreach (var bot in bots)
         {
-        // 元の1時間単位に戻す
-        int botCoins = bot.GetCurrentScorePerHour() * (int)offlineDuration.TotalHours;
-        totalCoinsToAdd += botCoins;
-        Debug.Log($"Bot: {bot.Name}, Level: {bot.Level}, Coins Added: {botCoins}");
+            int botCoins = bot.GetCurrentScorePerHour() * (int)offlineDuration.TotalHours;
+            totalCoinsToAdd += botCoins;
+            Debug.Log($"Bot: {bot.Name}, Level: {bot.Level}, Coins Added: {botCoins}");
         }
 
         ScoreManager.Instance.AddScore(totalCoinsToAdd);
@@ -263,7 +276,7 @@ public class PlayFabManager : MonoBehaviour
 
         PlayFabClientAPI.UpdateUserData(request, OnDataSend, OnError);
 
-        yield return new WaitForSeconds(2); 
+        yield return new WaitForSeconds(2);
 
         _isSavingData = false;
     }
@@ -284,7 +297,7 @@ public class PlayFabManager : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(1); 
+            yield return new WaitForSeconds(1);
             if (_dataChanged && !_isSavingData && _isDataLoaded)
             {
                 StartCoroutine(SavePlayerDataCoroutine());
@@ -353,7 +366,6 @@ public class PlayFabManager : MonoBehaviour
             }
             else
             {
-                // ロードされたデータがない場合は、エネルギーをデフォルト値に設定しない
                 Debug.LogWarning("No CurrentEnergy data found, keeping the current value.");
             }
 
@@ -392,5 +404,23 @@ public class PlayFabManager : MonoBehaviour
     public void IncreaseXFollow(int amount)
     {
         _xFollowToSave += amount;
+    }
+
+    // JavaScriptから呼び出されるデータ保存メソッド
+    public void SaveDataFromJS(string jsonData)
+    {
+        var data = JsonUtility.FromJson<PlayerData>(jsonData);
+        SavePlayerDataImmediate(data.score, data.playerLevel, data.xFollow, data.invitation, data.botLevels, data.currentEnergy);
+    }
+
+    [Serializable]
+    public class PlayerData
+    {
+        public int score;
+        public int playerLevel;
+        public int xFollow;
+        public int invitation;
+        public Dictionary<string, int> botLevels;
+        public int currentEnergy;
     }
 }
