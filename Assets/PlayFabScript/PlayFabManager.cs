@@ -22,13 +22,13 @@ public class PlayFabManager : MonoBehaviour
     private string _playFabId;
     private int _currentEnergyToSave;
     private bool _dataChanged = false;
+    private DateTime _lastLoginTime;
 
     public int XFollowToSave => _xFollowToSave;
     public int InvitationToSave => _invitationToSave;
     public int CurrentEnergyToSave => _currentEnergyToSave;
 
     private static readonly string CUSTOM_ID_SAVE_KEY = "CUSTOM_ID_SAVE_KEY_GAME2";
-    private string lastSessionEndTimeKey = "LastSessionEndTime";
 
     private void Awake()
     {
@@ -48,24 +48,13 @@ public class PlayFabManager : MonoBehaviour
     void Start()
     {
         Login();
-        StartCoroutine(WaitForLoginThenCalculateOfflineTime());
         StartCoroutine(AutoSaveData());
-    }
-
-    private IEnumerator WaitForLoginThenCalculateOfflineTime()
-    {
-        while (!_isDataLoaded)
-        {
-            yield return null;
-        }
-        CalculateOfflineTime();
     }
 
     private void OnApplicationFocusChanged(bool hasFocus)
     {
         if (!hasFocus)
         {
-            SaveLastSessionEndTime();
             SavePlayerDataImmediate(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, XFollowToSave, InvitationToSave, BotManager.Instance.GetBotLevels(), EnergyManager.Instance.CurrentEnergy);
             Debug.Log("Data saved on application losing focus.");
         }
@@ -73,7 +62,6 @@ public class PlayFabManager : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-        SaveLastSessionEndTime();
         SavePlayerDataImmediate(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, XFollowToSave, InvitationToSave, BotManager.Instance.GetBotLevels(), EnergyManager.Instance.CurrentEnergy);
         Debug.Log("Data saved on application quit.");
     }
@@ -82,57 +70,6 @@ public class PlayFabManager : MonoBehaviour
     {
         Application.focusChanged -= OnApplicationFocusChanged;
         Application.quitting -= OnApplicationQuit;
-    }
-
-    private void SaveLastSessionEndTime()
-    {
-        DateTime currentTime = DateTime.UtcNow;
-        PlayerPrefs.SetString(lastSessionEndTimeKey, currentTime.ToString());
-        PlayerPrefs.Save();
-        Debug.Log($"Saved last session end time: {currentTime}");
-    }
-
-    private void CalculateOfflineTime()
-    {
-        if (PlayerPrefs.HasKey(lastSessionEndTimeKey))
-        {
-            DateTime lastSessionEndTime = DateTime.Parse(PlayerPrefs.GetString(lastSessionEndTimeKey));
-            TimeSpan offlineDuration = DateTime.UtcNow - lastSessionEndTime;
-
-            Debug.Log($"Offline Duration: {offlineDuration.TotalSeconds} seconds");
-
-            int energyToAdd = CalculateEnergyForOfflineDuration(offlineDuration);
-            Debug.Log($"Energy to add: {energyToAdd} (Recovery Rate: {LevelManager.Instance.ScoreIncreaseAmount} per second)");
-            EnergyManager.Instance.IncreaseEnergy(energyToAdd);
-
-            CalculateBotEarnings(offlineDuration);
-        }
-        else
-        {
-            Debug.Log("No previous session end time found.");
-        }
-    }
-
-    private int CalculateEnergyForOfflineDuration(TimeSpan offlineDuration)
-    {
-        int energyRecoveryRate = LevelManager.Instance.ScoreIncreaseAmount;
-        return (int)(offlineDuration.TotalSeconds * energyRecoveryRate);
-    }
-
-    private void CalculateBotEarnings(TimeSpan offlineDuration)
-    {
-        int totalCoinsToAdd = 0;
-        var bots = BotManager.Instance.GetBots();
-        foreach (var bot in bots)
-        {
-        // 元の1時間単位に戻す
-        int botCoins = bot.GetCurrentScorePerHour() * (int)offlineDuration.TotalHours;
-        totalCoinsToAdd += botCoins;
-        Debug.Log($"Bot: {bot.Name}, Level: {bot.Level}, Coins Added: {botCoins}");
-        }
-
-        ScoreManager.Instance.AddScore(totalCoinsToAdd);
-        Debug.Log($"Total coins added from bots: {totalCoinsToAdd}");
     }
 
     private void Login()
@@ -161,6 +98,27 @@ public class PlayFabManager : MonoBehaviour
         _titlePlayerID = result.EntityToken.Entity.Id;
 
         LoadPlayerData();
+        PlayFabClientAPI.GetTime(new GetTimeRequest(), OnGetTimeSuccess, OnGetTimeFailure);
+    }
+
+    private void OnGetTimeSuccess(GetTimeResult result)
+    {
+        DateTime currentTime = result.Time;
+        if (PlayerPrefs.HasKey("LastLoginTime"))
+        {
+            _lastLoginTime = DateTime.Parse(PlayerPrefs.GetString("LastLoginTime"));
+            TimeSpan timeDifference = currentTime - _lastLoginTime;
+            int secondsElapsed = (int)timeDifference.TotalSeconds;
+            EnergyManager.Instance.IncreaseEnergyBasedOnTime(secondsElapsed);
+            Debug.Log($"Energy increased by {secondsElapsed} seconds of offline time.");
+        }
+        PlayerPrefs.SetString("LastLoginTime", currentTime.ToString());
+        PlayerPrefs.Save();
+    }
+
+    private void OnGetTimeFailure(PlayFabError error)
+    {
+        Debug.LogError("Failed to get server time: " + error.GenerateErrorReport());
     }
 
     private void OnLoginFailure(PlayFabError error)
@@ -193,11 +151,6 @@ public class PlayFabManager : MonoBehaviour
     {
         Guid guid = Guid.NewGuid();
         return guid.ToString("N");
-    }
-
-    public void MarkDataChanged()
-    {
-        _dataChanged = true;
     }
 
     public void SavePlayerData(int score, int playerLevel, int xFollow, int invitation, Dictionary<string, int> botLevels, int currentEnergy)

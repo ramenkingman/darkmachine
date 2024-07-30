@@ -1,10 +1,12 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using TMPro;
 using System.Collections;
 
 public class EnergyManager : MonoBehaviour
 {
     public static EnergyManager Instance { get; private set; }
+    
+    [SerializeField] private TextMeshProUGUI energyRecoveredText; // Text Mesh Pro UIの参照
 
     private int currentEnergy = 2000; 
     private int maxEnergy = 2000; 
@@ -78,6 +80,28 @@ public class EnergyManager : MonoBehaviour
                 TapController.Instance?.UpdateEnergyText();
                 Debug.Log($"IncreaseEnergyOverTime: Energy increased to {currentEnergy} by {energyIncreaseAmount}");
             }
+        }
+    }
+    
+    public void IncreaseEnergyBasedOnTime(int secondsElapsed)
+    {
+        int energyRecoveryRate = LevelManager.Instance.ScoreIncreaseAmount;
+        int energyToAdd = energyRecoveryRate * secondsElapsed;
+        DisplayEnergyRecovered(energyToAdd);
+        StartCoroutine(DelayedEnergyIncrease(energyToAdd));
+    }
+
+    private IEnumerator DelayedEnergyIncrease(int amount)
+    {
+        yield return new WaitForSeconds(1f); // 1秒待機
+        IncreaseEnergy(amount);
+    }
+
+    private void DisplayEnergyRecovered(int amount)
+    {
+        if (energyRecoveredText != null)
+        {
+            energyRecoveredText.text = $"Energy recovered: {amount}";
         }
     }
 }
