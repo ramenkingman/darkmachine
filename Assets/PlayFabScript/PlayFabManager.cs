@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using PlayFab;
 using PlayFab.ClientModels;
-using TMPro;
 
 public class PlayFabManager : MonoBehaviour
 {
@@ -29,10 +28,7 @@ public class PlayFabManager : MonoBehaviour
     public int InvitationToSave => _invitationToSave;
     public int CurrentEnergyToSave => _currentEnergyToSave;
 
-    public TextMeshProUGUI scoreIncreaseText;
-
     private static readonly string CUSTOM_ID_SAVE_KEY = "CUSTOM_ID_SAVE_KEY_GAME2";
-    private static readonly string LAST_LOGIN_TIME_KEY = "LastLoginTime";
 
     private void Awake()
     {
@@ -108,44 +104,16 @@ public class PlayFabManager : MonoBehaviour
     private void OnGetTimeSuccess(GetTimeResult result)
     {
         DateTime currentTime = result.Time;
-        if (PlayerPrefs.HasKey(LAST_LOGIN_TIME_KEY))
+        if (PlayerPrefs.HasKey("LastLoginTime"))
         {
-            _lastLoginTime = DateTime.Parse(PlayerPrefs.GetString(LAST_LOGIN_TIME_KEY));
+            _lastLoginTime = DateTime.Parse(PlayerPrefs.GetString("LastLoginTime"));
             TimeSpan timeDifference = currentTime - _lastLoginTime;
             int secondsElapsed = (int)timeDifference.TotalSeconds;
-
-            int scoreIncrease = CalculateOfflineScore(timeDifference);
-            ScoreManager.Instance.AddScore(scoreIncrease);
-            if (scoreIncreaseText != null)
-            {
-                scoreIncreaseText.text = $"Score increased: {scoreIncrease}";
-            }
-
-            StartCoroutine(UpdateEnergyAfterDelay(scoreIncrease));
-
-            Debug.Log($"Score increased by {scoreIncrease} due to offline time of {secondsElapsed} seconds.");
+            EnergyManager.Instance.IncreaseEnergyBasedOnTime(secondsElapsed);
+            Debug.Log($"Energy increased by {secondsElapsed} seconds of offline time.");
         }
-        PlayerPrefs.SetString(LAST_LOGIN_TIME_KEY, currentTime.ToString());
+        PlayerPrefs.SetString("LastLoginTime", currentTime.ToString());
         PlayerPrefs.Save();
-    }
-
-    private int CalculateOfflineScore(TimeSpan timeDifference)
-    {
-        int totalCoinsToAdd = 0;
-        var bots = BotManager.Instance.GetBots();
-        foreach (var bot in bots)
-        {
-            int botCoins = bot.GetCurrentScorePerHour() * (int)timeDifference.TotalHours;
-            totalCoinsToAdd += botCoins;
-            Debug.Log($"Bot: {bot.Name}, Level: {bot.Level}, Coins Added: {botCoins}");
-        }
-        return totalCoinsToAdd;
-    }
-
-    private IEnumerator UpdateEnergyAfterDelay(int amount)
-    {
-        yield return new WaitForSeconds(1);
-        EnergyManager.Instance.IncreaseEnergy(amount);
     }
 
     private void OnGetTimeFailure(PlayFabError error)
