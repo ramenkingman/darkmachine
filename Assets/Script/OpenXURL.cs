@@ -13,10 +13,14 @@ public class OpenXURL : MonoBehaviour
     [DllImport("__Internal")]
     private static extern void copyDisplayName(string name);
 
+    // Import the JavaScript function to post on X
+    [DllImport("__Internal")]
+    private static extern void postToX(string message);
+
     public void OnMouseDown()
     {
         // Detect if the mouse is over the circleSpriteRenderer object
-        Debug.Log("URL clicked."); 
+        Debug.Log("URL clicked.");
         #if !UNITY_EDITOR && UNITY_WEBGL
         openURL("https://x.com/DarkMachineGame");
         #endif
@@ -26,6 +30,13 @@ public class OpenXURL : MonoBehaviour
     {
         #if !UNITY_EDITOR && UNITY_WEBGL
         copyDisplayName(displayName);
+        #endif
+    }
+
+    public void PostToX(string message)
+    {
+        #if !UNITY_EDITOR && UNITY_WEBGL
+        postToX(message);
         #endif
     }
 }
