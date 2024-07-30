@@ -1,7 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro; // TextMeshProUGUI 用の名前空間
+using TMPro;
+using System;
 
 public class BotManager : MonoBehaviour
 {
@@ -11,6 +12,9 @@ public class BotManager : MonoBehaviour
     public Bot SrDealer;
 
     public TextMeshProUGUI profitPerHourText;
+    public TextMeshProUGUI hourlyAddedScoreText;
+
+    private DateTime _lastScoreAddedTime;
 
     private void Awake()
     {
@@ -19,7 +23,6 @@ public class BotManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
             InitializeBots();
-            StartCoroutine(AddScoresPerHour()); // スコア加算コルーチンを開始
         }
         else
         {
@@ -29,11 +32,17 @@ public class BotManager : MonoBehaviour
 
     private void Start()
     {
+        Debug.Log("BotManager Start: Starting IncreaseScoreOverTime coroutine");
         if (profitPerHourText == null)
         {
             profitPerHourText = GameObject.Find("ProfitPerHourText").GetComponent<TextMeshProUGUI>();
         }
+        if (hourlyAddedScoreText == null)
+        {
+            hourlyAddedScoreText = GameObject.Find("HourlyAddedScoreText").GetComponent<TextMeshProUGUI>();
+        }
         UpdateBotUI();
+        StartCoroutine(IncreaseScoreOverTime());
     }
 
     private void InitializeBots()
@@ -55,7 +64,6 @@ public class BotManager : MonoBehaviour
             ScoreManager.Instance.AddScore(-bot.GetCurrentCost());
             bot.LevelUp();
             UpdateBotUI();
-
             SaveBotData();
         }
     }
@@ -66,21 +74,44 @@ public class BotManager : MonoBehaviour
         {
             profitPerHourText = GameObject.Find("ProfitPerHourText").GetComponent<TextMeshProUGUI>();
         }
+        if (hourlyAddedScoreText == null)
+        {
+            hourlyAddedScoreText = GameObject.Find("HourlyAddedScoreText").GetComponent<TextMeshProUGUI>();
+        }
 
         int totalScoresPerHour = JrDealer.GetCurrentScorePerHour() + SrDealer.GetCurrentScorePerHour();
         profitPerHourText.text = totalScoresPerHour.ToString();
     }
 
-    private IEnumerator AddScoresPerHour()
+    private IEnumerator IncreaseScoreOverTime()
     {
         while (true)
         {
-            yield return new WaitForSeconds(3600);
+            yield return new WaitForSeconds(10);
+            DateTime currentTime = DateTime.UtcNow;
+            if (_lastScoreAddedTime != default(DateTime))
+            {
+                TimeSpan elapsed = currentTime - _lastScoreAddedTime;
+                int secondsElapsed = (int)elapsed.TotalSeconds;
 
-            int scoresToAdd = JrDealer.GetCurrentScorePerHour() + SrDealer.GetCurrentScorePerHour();
-            ScoreManager.Instance.AddScore(scoresToAdd);
-            Debug.Log("一時間ごとに追加されたスコア: " + scoresToAdd);
+                AddScoresBasedOnElapsedTime(secondsElapsed);
+            }
+            _lastScoreAddedTime = currentTime;
         }
+    }
+
+    public void AddScoresBasedOnElapsedTime(int secondsElapsed)
+    {
+        int scoresPerSecond = (JrDealer.GetCurrentScorePerHour() + SrDealer.GetCurrentScorePerHour()) / 10;
+        int scoresToAdd = scoresPerSecond * secondsElapsed;
+
+        if (hourlyAddedScoreText != null)
+        {
+            hourlyAddedScoreText.text = $"Added Score: {scoresToAdd}";
+        }
+
+        ScoreManager.Instance.AddScore(scoresToAdd); // スコアを追加
+        Debug.Log($"経過秒ごとに追加されたスコア: {scoresToAdd}");
     }
 
     public void SetBotLevel(string botName, int level)
@@ -119,5 +150,10 @@ public class BotManager : MonoBehaviour
     public List<Bot> GetBots()
     {
         return new List<Bot> { JrDealer, SrDealer };
+    }
+
+    public void SetLastScoreAddedTime(DateTime time)
+    {
+        _lastScoreAddedTime = time;
     }
 }
