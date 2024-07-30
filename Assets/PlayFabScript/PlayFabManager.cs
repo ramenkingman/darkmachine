@@ -79,48 +79,46 @@ public class PlayFabManager : MonoBehaviour
         PlayFabClientAPI.LoginWithCustomID(request, OnLoginSuccess, OnLoginFailure);
     }
 
-   private void OnLoginSuccess(LoginResult result)
-{
-    if (_shouldCreateAccount && !result.NewlyCreated)
+    private void OnLoginSuccess(LoginResult result)
     {
-        Debug.LogWarning("CustomId :" + _customID + "は既に使われています。");
-        return;
+        if (_shouldCreateAccount && !result.NewlyCreated)
+        {
+            Debug.LogWarning("CustomId :" + _customID + "は既に使われています。");
+            return;
+        }
+
+        if (result.NewlyCreated)
+        {
+            SaveCustomID();
+            Debug.Log("新規作成成功");
+        }
+
+        Debug.Log("ログイン成功!!");
+        _playFabId = result.PlayFabId;
+        _titlePlayerID = result.EntityToken.Entity.Id;
+
+        LoadPlayerData();
+        PlayFabClientAPI.GetTime(new GetTimeRequest(), OnGetTimeSuccess, OnGetTimeFailure);
     }
 
-    if (result.NewlyCreated)
+    private void OnGetTimeSuccess(GetTimeResult result)
     {
-        SaveCustomID();
-        Debug.Log("新規作成成功");
+        DateTime currentTime = result.Time;
+        if (PlayerPrefs.HasKey("LastLoginTime"))
+        {
+            _lastLoginTime = DateTime.Parse(PlayerPrefs.GetString("LastLoginTime"));
+            TimeSpan timeDifference = currentTime - _lastLoginTime;
+            int secondsElapsed = (int)timeDifference.TotalSeconds;
+            EnergyManager.Instance.IncreaseEnergyBasedOnTime(secondsElapsed);
+            BotManager.Instance?.AddScoresBasedOnElapsedTime(secondsElapsed); // ここで呼び出し
+            Debug.Log($"Energy increased by {secondsElapsed} seconds of offline time.");
+
+            // 前回のスコア加算時間も設定
+            BotManager.Instance.SetLastScoreAddedTime(_lastLoginTime);
+        }
+        PlayerPrefs.SetString("LastLoginTime", currentTime.ToString());
+        PlayerPrefs.Save();
     }
-
-    Debug.Log("ログイン成功!!");
-    _playFabId = result.PlayFabId;
-    _titlePlayerID = result.EntityToken.Entity.Id;
-
-    LoadPlayerData();
-    PlayFabClientAPI.GetTime(new GetTimeRequest(), OnGetTimeSuccess, OnGetTimeFailure);
-}
-
-private void OnGetTimeSuccess(GetTimeResult result)
-{
-    DateTime currentTime = result.Time;
-    if (PlayerPrefs.HasKey("LastLoginTime"))
-    {
-        _lastLoginTime = DateTime.Parse(PlayerPrefs.GetString("LastLoginTime"));
-        TimeSpan timeDifference = currentTime - _lastLoginTime;
-        int secondsElapsed = (int)timeDifference.TotalSeconds;
-        EnergyManager.Instance.IncreaseEnergyBasedOnTime(secondsElapsed);
-        BotManager.Instance?.AddScoresBasedOnElapsedTime(secondsElapsed); // ここで呼び出し
-        Debug.Log($"Energy increased by {secondsElapsed} seconds of offline time.");
-
-        // 前回のスコア加算時間も設定
-        BotManager.Instance.SetLastScoreAddedTime(_lastLoginTime);
-    }
-    PlayerPrefs.SetString("LastLoginTime", currentTime.ToString());
-    PlayerPrefs.Save();
-}
-
-
 
     private void OnGetTimeFailure(PlayFabError error)
     {
@@ -222,7 +220,7 @@ private void OnGetTimeSuccess(GetTimeResult result)
 
         PlayFabClientAPI.UpdateUserData(request, OnDataSend, OnError);
 
-        yield return new WaitForSeconds(2); 
+        yield return new WaitForSeconds(2);
 
         _isSavingData = false;
     }
@@ -243,10 +241,11 @@ private void OnGetTimeSuccess(GetTimeResult result)
     {
         while (true)
         {
-            yield return new WaitForSeconds(1); 
-            if (_dataChanged && !_isSavingData && _isDataLoaded)
+            yield return new WaitForSeconds(2); // 2秒ごとにデータを保存
+            if ((ScoreManager.Instance.HasScoreChanged() || _dataChanged) && !_isSavingData && _isDataLoaded)
             {
-                StartCoroutine(SavePlayerDataCoroutine());
+                SavePlayerDataImmediate(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, XFollowToSave, InvitationToSave, BotManager.Instance.GetBotLevels(), EnergyManager.Instance.CurrentEnergy);
+                ScoreManager.Instance.ResetScoreChangedFlag(); // スコア変更フラグをリセット
                 _dataChanged = false;
             }
         }

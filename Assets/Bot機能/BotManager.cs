@@ -87,7 +87,7 @@ public class BotManager : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(10);
+            yield return new WaitForSeconds(3600);
             DateTime currentTime = DateTime.UtcNow;
             if (_lastScoreAddedTime != default(DateTime))
             {
@@ -102,7 +102,7 @@ public class BotManager : MonoBehaviour
 
     public void AddScoresBasedOnElapsedTime(int secondsElapsed)
     {
-        int scoresPerSecond = (JrDealer.GetCurrentScorePerHour() + SrDealer.GetCurrentScorePerHour()) / 10;
+        int scoresPerSecond = (JrDealer.GetCurrentScorePerHour() + SrDealer.GetCurrentScorePerHour()) / 3600;
         int scoresToAdd = scoresPerSecond * secondsElapsed;
 
         if (hourlyAddedScoreText != null)
