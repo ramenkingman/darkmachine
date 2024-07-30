@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
+using TMPro; // TextMeshProUGUI 用の名前空間
 
 public class BotManager : MonoBehaviour
 {
@@ -19,7 +19,7 @@ public class BotManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
             InitializeBots();
-            StartCoroutine(AddScoresPerHour());
+            StartCoroutine(AddScoresPerHour()); // スコア加算コルーチンを開始
         }
         else
         {
@@ -75,7 +75,7 @@ public class BotManager : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(10);
+            yield return new WaitForSeconds(3600);
 
             int scoresToAdd = JrDealer.GetCurrentScorePerHour() + SrDealer.GetCurrentScorePerHour();
             ScoreManager.Instance.AddScore(scoresToAdd);
