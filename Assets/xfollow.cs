@@ -9,6 +9,7 @@ public class ButtonHandler : MonoBehaviour
 {
     public Button button1;
     public Button button2;
+    public Button resetButton; // リセットボタンをインスペクターで指定
     public GameObject warningObject; // 特定のオブジェクトをインスペクターで指定
 
     private bool hasPressedButton1 = false;
@@ -24,6 +25,11 @@ public class ButtonHandler : MonoBehaviour
         if (button2 != null)
         {
             button2.onClick.AddListener(OnButton2Clicked);
+        }
+
+        if (resetButton != null)
+        {
+            resetButton.onClick.AddListener(ResetPlayerData);
         }
 
         // PlayFabから初期状態を取得
@@ -46,11 +52,11 @@ public class ButtonHandler : MonoBehaviour
                 ScoreManager.Instance.SetScore(currentScore);
                 hasIncreasedScore = true;
                 SavePlayerData(currentScore);
-                button2.interactable = false; // ボタン2を非アクティブにする
+                button2.gameObject.SetActive(false); // ボタン2を完全に非アクティブにする
             }
             else
             {
-                button2.interactable = false; // 既にスコアが増加されている場合、ボタン2を常に非アクティブにする
+                button2.gameObject.SetActive(false); // 既にスコアが増加されている場合、ボタン2を完全に非アクティブにする
             }
         }
         else
@@ -91,12 +97,12 @@ public class ButtonHandler : MonoBehaviour
             }
 
             // 取得したデータに基づいてボタン2の状態を設定
-            button2.interactable = !hasIncreasedScore;
+            button2.gameObject.SetActive(!hasIncreasedScore);
         }
         else
         {
-            // データが存在しない場合もボタン2を非アクティブにする
-            button2.interactable = true;
+            // データが存在しない場合もボタン2をアクティブにする
+            button2.gameObject.SetActive(true);
         }
     }
 
@@ -125,6 +131,35 @@ public class ButtonHandler : MonoBehaviour
         };
 
         PlayFabClientAPI.UpdateUserData(request, OnDataSend, OnError);
+    }
+
+    public void ResetPlayerData() // public に変更
+    {
+        hasPressedButton1 = false;
+        hasIncreasedScore = false;
+        var initialScore = 0; // 初期スコアを適切に設定
+
+        var request = new UpdateUserDataRequest
+        {
+            Data = new Dictionary<string, string>
+            {
+                { "HasPressedButton1", hasPressedButton1.ToString() },
+                { "HasIncreasedScore", hasIncreasedScore.ToString() },
+                { "Score", initialScore.ToString() }
+            }
+        };
+
+        PlayFabClientAPI.UpdateUserData(request, OnResetDataSend, OnError);
+
+        // スコアをリセット
+        ScoreManager.Instance.SetScore(initialScore);
+        // ボタン2を再びアクティブにする
+        button2.gameObject.SetActive(true);
+    }
+
+    private void OnResetDataSend(UpdateUserDataResult result)
+    {
+        Debug.Log("プレイヤーデータがリセットされました！");
     }
 
     private void OnDataSend(UpdateUserDataResult result)
