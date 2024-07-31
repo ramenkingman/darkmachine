@@ -40,6 +40,7 @@ public class ButtonHandler2 : MonoBehaviour
     {
         hasPressedButton1 = true;
         SaveButton1Pressed();
+        Debug.Log("Button1 pressed. State saved: hasPressedButton1 = " + hasPressedButton1);
     }
 
     private void OnButton2Clicked()
@@ -53,15 +54,18 @@ public class ButtonHandler2 : MonoBehaviour
                 hasIncreasedScore = true;
                 SavePlayerData(currentScore);
                 button2.gameObject.SetActive(false); // ボタン2を完全に非アクティブにする
+                Debug.Log("Button2 pressed. Score increased by 10000. Current score: " + currentScore);
             }
             else
             {
                 button2.gameObject.SetActive(false); // 既にスコアが増加されている場合、ボタン2を完全に非アクティブにする
+                Debug.Log("Button2 pressed but score already increased.");
             }
         }
         else
         {
             StartCoroutine(ShowWarning());
+            Debug.Log("Button2 pressed without pressing Button1. Warning shown.");
         }
     }
 
@@ -76,7 +80,7 @@ public class ButtonHandler2 : MonoBehaviour
     {
         var request = new GetUserDataRequest
         {
-            Keys = new List<string> { "HasPressedButton1", "HasIncreasedScore" }
+            Keys = new List<string> { "ButtonHandler2_HasPressedButton1", "ButtonHandler2_HasIncreasedScore" }
         };
 
         PlayFabClientAPI.GetUserData(request, OnDataReceived, OnError);
@@ -86,14 +90,16 @@ public class ButtonHandler2 : MonoBehaviour
     {
         if (result.Data != null)
         {
-            if (result.Data.ContainsKey("HasPressedButton1"))
+            if (result.Data.ContainsKey("ButtonHandler2_HasPressedButton1"))
             {
-                hasPressedButton1 = bool.Parse(result.Data["HasPressedButton1"].Value);
+                hasPressedButton1 = bool.Parse(result.Data["ButtonHandler2_HasPressedButton1"].Value);
+                Debug.Log("Loaded hasPressedButton1: " + hasPressedButton1);
             }
 
-            if (result.Data.ContainsKey("HasIncreasedScore"))
+            if (result.Data.ContainsKey("ButtonHandler2_HasIncreasedScore"))
             {
-                hasIncreasedScore = bool.Parse(result.Data["HasIncreasedScore"].Value);
+                hasIncreasedScore = bool.Parse(result.Data["ButtonHandler2_HasIncreasedScore"].Value);
+                Debug.Log("Loaded hasIncreasedScore: " + hasIncreasedScore);
             }
 
             // 取得したデータに基づいてボタン2の状態を設定
@@ -112,7 +118,7 @@ public class ButtonHandler2 : MonoBehaviour
         {
             Data = new Dictionary<string, string>
             {
-                { "HasPressedButton1", hasPressedButton1.ToString() }
+                { "ButtonHandler2_HasPressedButton1", hasPressedButton1.ToString() }
             }
         };
 
@@ -126,7 +132,7 @@ public class ButtonHandler2 : MonoBehaviour
             Data = new Dictionary<string, string>
             {
                 { "Score", score.ToString() },
-                { "HasIncreasedScore", hasIncreasedScore.ToString() }
+                { "ButtonHandler2_HasIncreasedScore", hasIncreasedScore.ToString() }
             }
         };
 
@@ -143,8 +149,8 @@ public class ButtonHandler2 : MonoBehaviour
         {
             Data = new Dictionary<string, string>
             {
-                { "HasPressedButton1", hasPressedButton1.ToString() },
-                { "HasIncreasedScore", hasIncreasedScore.ToString() },
+                { "ButtonHandler2_HasPressedButton1", hasPressedButton1.ToString() },
+                { "ButtonHandler2_HasIncreasedScore", hasIncreasedScore.ToString() },
                 { "Score", initialScore.ToString() }
             }
         };
@@ -155,6 +161,7 @@ public class ButtonHandler2 : MonoBehaviour
         ScoreManager.Instance.SetScore(initialScore);
         // ボタン2を再びアクティブにする
         button2.gameObject.SetActive(true);
+        Debug.Log("Player data reset. Initial score: " + initialScore);
     }
 
     private void OnResetDataSend(UpdateUserDataResult result)

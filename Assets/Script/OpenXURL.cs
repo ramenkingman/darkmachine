@@ -17,6 +17,8 @@ public class OpenXURL : MonoBehaviour
     [DllImport("__Internal")]
     private static extern void postToX(string message);
 
+    private const string fixedMessage = "Let's play Dark Machine Battle Front 🔥\n\nInvite a friend and receive 10,000 points 🎁\n\nhttps://t.me/DarkMachineBot";
+
     public void OnMouseDown()
     {
         // Detect if the mouse is over the circleSpriteRenderer object
@@ -33,10 +35,10 @@ public class OpenXURL : MonoBehaviour
         #endif
     }
 
-    public void PostToX(string message)
+    public void PostToX()
     {
         #if !UNITY_EDITOR && UNITY_WEBGL
-        postToX(message);
+        postToX(fixedMessage);
         #endif
     }
 }

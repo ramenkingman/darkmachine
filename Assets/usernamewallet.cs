@@ -3,12 +3,14 @@ using UnityEngine.UI;
 using TMPro;
 using PlayFab;
 using PlayFab.ClientModels;
+using System.Collections;
 using System.Collections.Generic;
 
 public class ChangeCustomId : MonoBehaviour
 {
     public TMP_InputField inputField;
     public Button changeIdButton;
+    public GameObject warningObject; // アクティブ・非アクティブを切り替えるオブジェクト
     private string inputText;
 
     void Start()
@@ -20,6 +22,12 @@ public class ChangeCustomId : MonoBehaviour
         if (PlayerPrefs.HasKey("InputFieldText"))
         {
             inputField.text = PlayerPrefs.GetString("InputFieldText");
+        }
+
+        // 警告オブジェクトを非アクティブに設定
+        if (warningObject != null)
+        {
+            warningObject.SetActive(false);
         }
     }
 
@@ -36,6 +44,17 @@ public class ChangeCustomId : MonoBehaviour
     {
         // 入力フィールドのテキストを取得
         inputText = inputField.text;
+
+        // テキストの長さが5文字以上か確認
+        if (inputText.Length < 5)
+        {
+            // 警告オブジェクトをアクティブに設定
+            if (warningObject != null)
+            {
+                StartCoroutine(ShowWarning());
+            }
+            return;
+        }
 
         // PlayFabでCustomIdをリンク
         var linkCustomIdRequest = new LinkCustomIDRequest
@@ -63,6 +82,16 @@ public class ChangeCustomId : MonoBehaviour
 
         // ボタンを非アクティブにする
         changeIdButton.gameObject.SetActive(false);
+    }
+
+    IEnumerator ShowWarning()
+    {
+        // 警告オブジェクトをアクティブにする
+        warningObject.SetActive(true);
+        // 3秒待つ
+        yield return new WaitForSeconds(3);
+        // 警告オブジェクトを再び非アクティブにする
+        warningObject.SetActive(false);
     }
 
     void IncreaseScore(int amount)
