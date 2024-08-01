@@ -4,12 +4,19 @@ using UnityEngine.UI;
 public class PlaySoundOnButtonClick : MonoBehaviour
 {
     public AudioClip audioClip; // 再生するオーディオクリップをインスペクターで指定
-    private AudioSource audioSource; // オーディオソース
+    private static AudioSource audioSource; // オーディオソース
 
     void Start()
     {
-        // AudioSourceをこのオブジェクトに追加
-        audioSource = gameObject.AddComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            // AudioSourceがまだ存在しない場合、このオブジェクトに追加
+            GameObject audioSourceObject = new GameObject("GlobalAudioSource");
+            audioSource = audioSourceObject.AddComponent<AudioSource>();
+            DontDestroyOnLoad(audioSourceObject);
+        }
+
+        // オーディオクリップを設定
         audioSource.clip = audioClip;
 
         // ボタンのクリックイベントにリスナーを追加
