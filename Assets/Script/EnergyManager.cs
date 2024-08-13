@@ -1,13 +1,15 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using TMPro;
 using System.Collections;
 
 public class EnergyManager : MonoBehaviour
 {
     public static EnergyManager Instance { get; private set; }
+    
+    [SerializeField] private TextMeshProUGUI energyRecoveredText; // Text Mesh Pro UIの参照
 
-    private int currentEnergy = 2000; // 初期エネルギー
-    private int maxEnergy = 2000; // 最大エネルギー
+    private int currentEnergy = 2000; 
+    private int maxEnergy = 2000; 
 
     private void Awake()
     {
@@ -25,7 +27,7 @@ public class EnergyManager : MonoBehaviour
     private void Start()
     {
         Debug.Log("EnergyManager Start: Starting IncreaseEnergyOverTime coroutine");
-        StartCoroutine(IncreaseEnergyOverTime()); // コルーチンを開始
+        StartCoroutine(IncreaseEnergyOverTime());
     }
 
     public int CurrentEnergy => currentEnergy;
@@ -34,7 +36,7 @@ public class EnergyManager : MonoBehaviour
     public void SetCurrentEnergy(int energy)
     {
         currentEnergy = energy;
-        TapController.Instance?.UpdateEnergyText(); // nullチェックを追加
+        TapController.Instance?.UpdateEnergyText();
         Debug.Log($"SetCurrentEnergy: Energy set to {currentEnergy}");
     }
 
@@ -46,7 +48,7 @@ public class EnergyManager : MonoBehaviour
             currentEnergy = 0;
         }
 
-        TapController.Instance?.UpdateEnergyText(); // nullチェックを追加
+        TapController.Instance?.UpdateEnergyText();
         Debug.Log($"DecreaseEnergy: Energy decreased to {currentEnergy}");
     }
 
@@ -58,7 +60,7 @@ public class EnergyManager : MonoBehaviour
             currentEnergy = maxEnergy;
         }
 
-        TapController.Instance?.UpdateEnergyText(); // nullチェックを追加
+        TapController.Instance?.UpdateEnergyText();
         Debug.Log($"IncreaseEnergy: Energy increased to {currentEnergy}");
     }
 
@@ -75,9 +77,31 @@ public class EnergyManager : MonoBehaviour
                 {
                     currentEnergy = maxEnergy;
                 }
-                TapController.Instance?.UpdateEnergyText(); // nullチェックを追加
+                TapController.Instance?.UpdateEnergyText();
                 Debug.Log($"IncreaseEnergyOverTime: Energy increased to {currentEnergy} by {energyIncreaseAmount}");
             }
+        }
+    }
+    
+    public void IncreaseEnergyBasedOnTime(int secondsElapsed)
+    {
+        int energyRecoveryRate = LevelManager.Instance.ScoreIncreaseAmount;
+        int energyToAdd = energyRecoveryRate * secondsElapsed;
+        DisplayEnergyRecovered(energyToAdd);
+        StartCoroutine(DelayedEnergyIncrease(energyToAdd));
+    }
+
+    private IEnumerator DelayedEnergyIncrease(int amount)
+    {
+        yield return new WaitForSeconds(1f); // 1秒待機
+        IncreaseEnergy(amount);
+    }
+
+    private void DisplayEnergyRecovered(int amount)
+    {
+        if (energyRecoveredText != null)
+        {
+            energyRecoveredText.text = $"Energy recovered: {amount}";
         }
     }
 }

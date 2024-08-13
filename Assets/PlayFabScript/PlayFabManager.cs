@@ -9,8 +9,9 @@ public class PlayFabManager : MonoBehaviour
 {
     public static PlayFabManager Instance { get; private set; }
 
-    private bool _shouldCreateAccount;
+    private bool _shouldCreateAccount = true;
     private string _customID;
+    private string _titlePlayerID;
     private int _scoreToSave;
     private int _playerLevelToSave;
     private int _xFollowToSave;
@@ -21,13 +22,13 @@ public class PlayFabManager : MonoBehaviour
     private string _playFabId;
     private int _currentEnergyToSave;
     private bool _dataChanged = false;
+    private DateTime _lastLoginTime;
 
     public int XFollowToSave => _xFollowToSave;
     public int InvitationToSave => _invitationToSave;
     public int CurrentEnergyToSave => _currentEnergyToSave;
 
-    private static readonly string CUSTOM_ID_SAVE_KEY = "CUSTOM_ID_SAVE_KEY";
-    private string lastSessionEndTimeKey = "LastSessionEndTime";
+    private static readonly string CUSTOM_ID_SAVE_KEY = "CUSTOM_ID_SAVE_KEY_GAME2";
 
     private void Awake()
     {
@@ -35,6 +36,8 @@ public class PlayFabManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            Application.focusChanged += OnApplicationFocusChanged;
+            Application.quitting += OnApplicationQuit;
         }
         else
         {
@@ -45,75 +48,28 @@ public class PlayFabManager : MonoBehaviour
     void Start()
     {
         Login();
-        StartCoroutine(WaitForLoginThenCalculateOfflineTime());
         StartCoroutine(AutoSaveData());
     }
 
-    private IEnumerator WaitForLoginThenCalculateOfflineTime()
+    private void OnApplicationFocusChanged(bool hasFocus)
     {
-        while (!_isDataLoaded)
+        if (!hasFocus)
         {
-            yield return null;
+            SavePlayerDataImmediate(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, XFollowToSave, InvitationToSave, BotManager.Instance.GetBotLevels(), EnergyManager.Instance.CurrentEnergy);
+            Debug.Log("Data saved on application losing focus.");
         }
-        CalculateOfflineTime();
     }
 
     private void OnApplicationQuit()
     {
-        SaveLastSessionEndTime();
         SavePlayerDataImmediate(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, XFollowToSave, InvitationToSave, BotManager.Instance.GetBotLevels(), EnergyManager.Instance.CurrentEnergy);
         Debug.Log("Data saved on application quit.");
     }
 
-    private void SaveLastSessionEndTime()
+    private void OnDestroy()
     {
-        DateTime currentTime = DateTime.UtcNow;
-        PlayerPrefs.SetString(lastSessionEndTimeKey, currentTime.ToString());
-        PlayerPrefs.Save();
-        Debug.Log($"Saved last session end time: {currentTime}");
-    }
-
-    private void CalculateOfflineTime()
-    {
-        if (PlayerPrefs.HasKey(lastSessionEndTimeKey))
-        {
-            DateTime lastSessionEndTime = DateTime.Parse(PlayerPrefs.GetString(lastSessionEndTimeKey));
-            TimeSpan offlineDuration = DateTime.UtcNow - lastSessionEndTime;
-
-            Debug.Log($"Offline Duration: {offlineDuration.TotalSeconds} seconds");
-
-            int energyToAdd = CalculateEnergyForOfflineDuration(offlineDuration);
-            Debug.Log($"Energy to add: {energyToAdd}");
-            EnergyManager.Instance.IncreaseEnergy(energyToAdd);
-
-            CalculateBotEarnings(offlineDuration);
-        }
-        else
-        {
-            Debug.Log("No previous session end time found.");
-        }
-    }
-
-    private int CalculateEnergyForOfflineDuration(TimeSpan offlineDuration)
-    {
-        // 1秒ごとにエネルギーを1ポイント追加
-        return (int)(offlineDuration.TotalSeconds);
-    }
-
-    private void CalculateBotEarnings(TimeSpan offlineDuration)
-    {
-        int totalCoinsToAdd = 0;
-        var bots = BotManager.Instance.GetBots();
-        foreach (var bot in bots)
-        {
-        // 元の1時間単位に戻す
-        int botCoins = bot.GetCurrentScorePerHour() * (int)offlineDuration.TotalHours;
-        totalCoinsToAdd += botCoins;
-        Debug.Log($"Bot: {bot.Name}, Level: {bot.Level}, Coins Added: {botCoins}");
-        }
-
-        ScoreManager.Instance.AddScore(totalCoinsToAdd);
-        Debug.Log($"Total coins added from bots: {totalCoinsToAdd}");
+        Application.focusChanged -= OnApplicationFocusChanged;
+        Application.quitting -= OnApplicationQuit;
     }
 
     private void Login()
@@ -128,7 +84,6 @@ public class PlayFabManager : MonoBehaviour
         if (_shouldCreateAccount && !result.NewlyCreated)
         {
             Debug.LogWarning("CustomId :" + _customID + "は既に使われています。");
-            Login();
             return;
         }
 
@@ -140,8 +95,34 @@ public class PlayFabManager : MonoBehaviour
 
         Debug.Log("ログイン成功!!");
         _playFabId = result.PlayFabId;
+        _titlePlayerID = result.EntityToken.Entity.Id;
 
         LoadPlayerData();
+        PlayFabClientAPI.GetTime(new GetTimeRequest(), OnGetTimeSuccess, OnGetTimeFailure);
+    }
+
+    private void OnGetTimeSuccess(GetTimeResult result)
+    {
+        DateTime currentTime = result.Time;
+        if (PlayerPrefs.HasKey("LastLoginTime"))
+        {
+            _lastLoginTime = DateTime.Parse(PlayerPrefs.GetString("LastLoginTime"));
+            TimeSpan timeDifference = currentTime - _lastLoginTime;
+            int secondsElapsed = (int)timeDifference.TotalSeconds;
+            EnergyManager.Instance.IncreaseEnergyBasedOnTime(secondsElapsed);
+            BotManager.Instance?.AddScoresBasedOnElapsedTime(secondsElapsed); // ここで呼び出し
+            Debug.Log($"Energy increased by {secondsElapsed} seconds of offline time.");
+
+            // 前回のスコア加算時間も設定
+            BotManager.Instance.SetLastScoreAddedTime(_lastLoginTime);
+        }
+        PlayerPrefs.SetString("LastLoginTime", currentTime.ToString());
+        PlayerPrefs.Save();
+    }
+
+    private void OnGetTimeFailure(PlayFabError error)
+    {
+        Debug.LogError("Failed to get server time: " + error.GenerateErrorReport());
     }
 
     private void OnLoginFailure(PlayFabError error)
@@ -167,17 +148,13 @@ public class PlayFabManager : MonoBehaviour
     private void SaveCustomID()
     {
         PlayerPrefs.SetString(CUSTOM_ID_SAVE_KEY, _customID);
+        PlayerPrefs.Save();
     }
 
     private string GenerateCustomID()
     {
         Guid guid = Guid.NewGuid();
         return guid.ToString("N");
-    }
-
-    public void MarkDataChanged()
-    {
-        _dataChanged = true;
     }
 
     public void SavePlayerData(int score, int playerLevel, int xFollow, int invitation, Dictionary<string, int> botLevels, int currentEnergy)
@@ -243,7 +220,7 @@ public class PlayFabManager : MonoBehaviour
 
         PlayFabClientAPI.UpdateUserData(request, OnDataSend, OnError);
 
-        yield return new WaitForSeconds(2); // 2秒ごとにデータを保存
+        yield return new WaitForSeconds(2);
 
         _isSavingData = false;
     }
@@ -264,10 +241,11 @@ public class PlayFabManager : MonoBehaviour
     {
         while (true)
         {
-            yield return new WaitForSeconds(2); // 2秒ごとにデータを自動保存
-            if (_dataChanged && !_isSavingData)
+            yield return new WaitForSeconds(2); // 2秒ごとにデータを保存
+            if ((ScoreManager.Instance.HasScoreChanged() || _dataChanged) && !_isSavingData && _isDataLoaded)
             {
-                StartCoroutine(SavePlayerDataCoroutine());
+                SavePlayerDataImmediate(ScoreManager.Instance.Score, LevelManager.Instance.PlayerLevel, XFollowToSave, InvitationToSave, BotManager.Instance.GetBotLevels(), EnergyManager.Instance.CurrentEnergy);
+                ScoreManager.Instance.ResetScoreChangedFlag(); // スコア変更フラグをリセット
                 _dataChanged = false;
             }
         }
@@ -300,7 +278,7 @@ public class PlayFabManager : MonoBehaviour
                 ScoreManager.Instance.SetScore(score);
             }
 
-            if (result.Data.TryGetValue("PlayerLevel", out var playerLevelData))
+            if (LevelManager.Instance != null && result.Data.TryGetValue("PlayerLevel", out var playerLevelData))
             {
                 int playerLevel = int.Parse(playerLevelData.Value);
                 Debug.Log($"Loading PlayerLevel: {playerLevel}");
@@ -313,7 +291,7 @@ public class PlayFabManager : MonoBehaviour
             }
             else
             {
-                _xFollowToSave = 0; // デフォルト値
+                _xFollowToSave = 0;
             }
 
             if (result.Data.TryGetValue("Invitation", out var invitationData))
@@ -322,14 +300,19 @@ public class PlayFabManager : MonoBehaviour
             }
             else
             {
-                _invitationToSave = 0; // デフォルト値
+                _invitationToSave = 0;
             }
 
             if (result.Data.TryGetValue("CurrentEnergy", out var currentEnergyData))
             {
                 int loadedEnergy = int.Parse(currentEnergyData.Value);
                 Debug.Log($"Loaded energy: {loadedEnergy}");
-                EnergyManager.Instance.SetCurrentEnergy(loadedEnergy); // エネルギーのロード
+                EnergyManager.Instance.SetCurrentEnergy(loadedEnergy);
+            }
+            else
+            {
+                // ロードされたデータがない場合は、エネルギーをデフォルト値に設定しない
+                Debug.LogWarning("No CurrentEnergy data found, keeping the current value.");
             }
 
             if (BotManager.Instance != null)

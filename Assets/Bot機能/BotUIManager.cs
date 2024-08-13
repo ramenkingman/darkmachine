@@ -56,11 +56,10 @@ public class BotUIManager : MonoBehaviour
 
     private void LevelUpBot(Bot bot, TextMeshProUGUI levelupPopupText)
     {
-        int previousProfit = bot.GetCurrentScorePerHour(); // 修正: GetCurrentCoinsPerHour を GetCurrentScorePerHour に変更
+        int previousProfit = bot.GetCurrentScorePerHour();
         BotManager.Instance.LevelUpBot(bot);
-        UpdateBotUI(); // ポップアップ閉じた後にUIを更新
+        UpdateBotUI();
 
-        // LevelupPopupのテキストの設定
         SetLevelupPopupText(bot, previousProfit, levelupPopupText);
     }
 
@@ -72,7 +71,7 @@ public class BotUIManager : MonoBehaviour
             return;
         }
 
-        int currentProfit = bot.GetCurrentScorePerHour(); // 修正: GetCurrentCoinsPerHour を GetCurrentScorePerHour に変更
+        int currentProfit = bot.GetCurrentScorePerHour();
         levelupPopupText.text = $"{previousProfit}→{currentProfit}";
     }
 
@@ -129,15 +128,12 @@ public class BotUIManager : MonoBehaviour
 
         BotManager.Instance.UpdateBotUI();
 
-        // レベルテキストの更新
         UpdateLevelText(BotManager.Instance.JrDealer, jrDealerLevelText);
         UpdateLevelText(BotManager.Instance.SrDealer, srDealerLevelText);
 
-        // 利益テキストの更新
         UpdateProfitText(BotManager.Instance.JrDealer, jrDealerProfitText);
         UpdateProfitText(BotManager.Instance.SrDealer, srDealerProfitText);
 
-        // JrDealerPopupとSrDealerPopupの利益とコストテキストの更新
         UpdatePopupText(BotManager.Instance.JrDealer, profitOnJrDealerPopup, costOnJrDealerPopup);
         UpdatePopupText(BotManager.Instance.SrDealer, profitOnSrDealerPopup, costOnSrDealerPopup);
     }
@@ -162,7 +158,7 @@ public class BotUIManager : MonoBehaviour
         }
         else
         {
-            profitText.text = bot.GetNextScorePerHour().ToString(); // 修正: GetNextCoinsPerHour を GetNextScorePerHour に変更
+            profitText.text = bot.GetNextScorePerHour().ToString();
         }
     }
 
@@ -175,7 +171,7 @@ public class BotUIManager : MonoBehaviour
         }
         else
         {
-            profitText.text = bot.GetNextScorePerHour().ToString(); // 修正: GetNextCoinsPerHour を GetNextScorePerHour に変更
+            profitText.text = bot.GetNextScorePerHour().ToString();
             costText.text = bot.GetCurrentCost().ToString();
         }
     }
